@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}جست‌وجوی پیشرفته | ضحی آنلاین{% endblock %}
+{% block page_title %}جست‌وجوی پیشرفته{% endblock %}
+{% block eyebrow %}ارزیابی هم‌زمان متن، خلاصه و هر تعداد نمایه{% endblock %}
+{% block content %}
+{% if project %}
+<form id="projectAddForm" method="post" action="{% url 'project_add_researches' project.pk %}" class="project-selection-bar animate__animated animate__fadeInDown">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <div class="project-selection-info">
+    <span class="project-selection-icon"><i class="fa-solid fa-folder-plus"></i></span>
+    <div class="min-w-0">
+      <small>افزودن فیش‌های انتخابی به پروژه تبلیغی</small>
+      <strong class="text-truncate">{{ project.title }}</strong>
+    </div>
+  </div>
+  <div class="project-selection-actions">
+    <span class="selection-counter"><b data-selected-count>۰</b> فیش انتخاب شده</span>
+    <a class="btn btn-light" href="{% url 'project_edit' project.pk %}"><i class="fa-solid fa-pen-to-square ms-2"></i>ویرایش پروژه</a>
+    <button class="btn btn-success" type="submit" data-project-add-submit disabled><i class="fa-solid fa-plus ms-2"></i>افزودن به پروژه</button>
+  </div>
+</form>
+{% endif %}
+
+<section class="search-hero animate__animated animate__fadeIn">
+  <div><span class="hero-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> موتور بازیابی ضحی</span><h2>دانش مورد نیازتان را با چند شرط دقیق پیدا کنید</h2><p>عبارت‌ها را در متن اصلی و خلاصه ارزیابی کنید و هر تعداد نمایه را با منطق «همه» یا «حداقل یکی» بیفزایید.</p></div>
+  <div class="search-orbit"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+</section>
+
+<form method="get" id="advancedSearchForm" class="search-builder" autocomplete="off">
+  {% if project %}<input type="hidden" name="project" value="{{ project.pk }}">{% endif %}
+  <section class="panel-card mb-4">
+    <div class="panel-heading"><div><span class="section-kicker">مرحله ۱</span><h3>عبارت و دامنه جست‌وجو</h3></div><span class="panel-badge"><i class="fa-solid fa-text-width"></i> جست‌وجوی متنی</span></div>
+    <div class="row g-3">
+      <div class="col-lg-8"><label class="form-label">عبارت، کلمه یا ترکیب مورد نظر</label><div class="search-main-input"><i class="fa-solid fa-magnifying-glass"></i><input class="form-control" name="q" value="{{ params.q }}" placeholder="برای نمونه: آثار صبر در زندگی خانوادگی"><button type="submit" class="btn btn-primary">جست‌وجو</button></div></div>
+      <div class="col-lg-4"><label class="form-label">نحوه تطبیق واژه‌ها</label><select class="form-select" name="word_mode"><option value="all" {% if word_mode == 'all' %}selected{% endif %}>وجود همه واژه‌ها</option><option value="any" {% if word_mode == 'any' %}selected{% endif %}>وجود حداقل یک واژه</option><option value="exact" {% if word_mode == 'exact' %}selected{% endif %}>عبارت دقیق</option></select></div>
+      <div class="col-12"><label class="form-label">محل ارزیابی عبارت</label><div class="field-choice-grid">
+        <label><input type="checkbox" name="q_fields" value="title" {% if 'title' in selected_fields %}checked{% endif %}><span><i class="fa-solid fa-heading"></i>عنوان</span></label>
+        <label><input type="checkbox" name="q_fields" value="body" {% if 'body' in selected_fields %}checked{% endif %}><span><i class="fa-solid fa-align-right"></i>متن اصلی</span></label>
+        <label><input type="checkbox" name="q_fields" value="abstract" {% if 'abstract' in selected_fields %}checked{% endif %}><span><i class="fa-regular fa-note-sticky"></i>خلاصه</span></label>
+        <label><input type="checkbox" name="q_fields" value="keywords" {% if 'keywords' in selected_fields %}checked{% endif %}><span><i class="fa-solid fa-tags"></i>کلمات کلیدی</span></label>
+        <label><input type="checkbox" name="q_fields" value="source" {% if 'source' in selected_fields %}checked{% endif %}><span><i class="fa-solid fa-book-open"></i>منبع</span></label>
+      </div></div>
+    </div>
+  </section>
+
+  <section class="panel-card mb-4">
+    <div class="panel-heading"><div><span class="section-kicker">مرحله ۲</span><h3>شرط‌های نمایه‌ای نامحدود</h3><p class="text-muted mb-0 mt-1">هر تعداد موضوع، شخصیت، مناسبت، کلید پردازش یا نمایه سفارشی اضافه کنید.</p></div><button type="button" class="btn btn-soft-primary" id="addIndexFilter"><i class="fa-solid fa-plus ms-2"></i>افزودن شرط</button></div>
+    <div class="logic-switch mb-3"><label><input type="radio" name="index_match" value="all" {% if match_mode != 'any' %}checked{% endif %}><b>همه شرط‌ها</b><small>AND</small></label><label><input type="radio" name="index_match" value="any" {% if match_mode == 'any' %}checked{% endif %}><b>حداقل یکی</b><small>OR</small></label></div>
+    <div id="indexFilterRows" class="filter-row-list"></div>
+    <div class="empty-filter-message" id="emptyFilterMessage"><i class="fa-solid fa-filter-circle-xmark"></i><p>هنوز شرط نمایه‌ای اضافه نشده است.</p><button type="button" class="btn btn-sm btn-soft-primary" data-add-first-filter>اولین شرط را اضافه کن</button></div>
+  </section>
+
+  <div class="supplementary-filter-toggle mb-3">
+    <button class="btn btn-light border" type="button" data-bs-toggle="collapse" data-bs-target="#supplementaryFilters" aria-expanded="{% if supplementary_open %}true{% else %}false{% endif %}" aria-controls="supplementaryFilters">
+      <i class="fa-solid fa-sliders ms-2"></i><span data-collapse-label>نمایش پالایش تکمیلی</span><i class="fa-solid fa-chevron-down me-2 collapse-arrow"></i>
+    </button>
+  </div>
+  <section id="supplementaryFilters" class="collapse {% if supplementary_open %}show{% endif %} panel-card mb-4 supplementary-filter-panel">
+    <div class="panel-heading"><div><span class="section-kicker">پالایش اختیاری</span><h3>محدودکننده‌های تکمیلی</h3></div></div>
+    <div class="row g-3"><div class="col-md-6"><label class="form-label">فیش‌نگار</label><select name="researcher" class="form-select select2"><option value="">همه فیش‌نگاران</option>{% for item in researchers %}<option value="{{ item.pk }}" {% if params.researcher == item.pk|stringformat:'s' %}selected{% endif %}>{{ item.display_name }}</option>{% endfor %}</select></div>{% if is_zoha_admin %}<div class="col-md-6"><label class="form-label">وضعیت گردش کار</label><select name="status" class="form-select"><option value="">همه وضعیت‌ها</option>{% for value,label in status_choices %}<option value="{{ value }}" {% if params.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>{% endif %}</div>
+  </section>
+
+  <section class="search-action-card mb-4"><a class="btn btn-light" href="{% url 'advanced_search' %}{% if project %}?project={{ project.pk }}{% endif %}"><i class="fa-solid fa-rotate-left ms-2"></i>پاک‌کردن شرط‌ها</a><button class="btn btn-primary btn-lg"><i class="fa-solid fa-magnifying-glass ms-2"></i>اجرای جست‌وجوی ترکیبی</button></section>
+</form>
+
+{% if params %}
+<div class="search-results-header"><div><span class="result-count">{{ count }}</span><div><h3>نتیجه پیدا شد</h3><p>{% if search_backend == 'postgresql' and params.q %}مرتب‌شده بر اساس امتیاز Full-Text و شباهت عنوان{% else %}مرتب‌شده بر اساس آخرین به‌روزرسانی{% endif %}</p></div></div><div class="view-switch"><button class="active" data-view="grid"><i class="fa-solid fa-grid-2"></i></button><button data-view="list"><i class="fa-solid fa-list"></i></button></div></div>
+<div class="row g-4">
+  <div class="col-xl-9"><div class="search-results-grid" id="searchResults">
+    {% for r in results %}
+    <article class="result-card animate__animated animate__fadeInUp {% if project and r.pk in project_research_ids %}result-card-in-project{% endif %}">
+      {% if project %}<div class="project-result-selector">{% if r.pk in project_research_ids %}<span class="already-in-project"><i class="fa-solid fa-circle-check"></i>در پروژه موجود است</span>{% else %}<label><input type="checkbox" name="research_ids" value="{{ r.pk }}" form="projectAddForm" class="project-result-checkbox"><span><i class="fa-regular fa-square-check"></i>انتخاب برای پروژه</span></label>{% endif %}</div>{% endif %}
+      <div class="result-card-top"><div class="result-icon"><i class="fa-solid fa-file-lines"></i></div><div class="flex-grow-1 min-w-0"><div class="d-flex flex-wrap gap-2 mb-2"><span class="status-pill status-{{ r.status }}">{{ r.get_status_display }}</span>{% if r.content_kind %}<span class="soft-tag">{{ r.content_kind.title }}</span>{% endif %}{% if r.main_format %}<span class="soft-tag"><i class="fa-solid fa-photo-film"></i>{{ r.main_format.title }}</span>{% endif %}</div><h3><a href="{% url 'research_detail' r.pk %}">{{ r.title }}</a></h3></div><a class="icon-action" href="{% url 'research_detail' r.pk %}"><i class="fa-solid fa-arrow-left"></i></a></div>
+      <p class="result-summary">{{ r.abstract|default:r.body|striptags|truncatechars:280 }}</p><div class="result-topics">{% for a in r.topic_analyses.all|slice:':5' %}<span><i class="fa-solid fa-hashtag"></i>{{ a.topic.title }}</span>{% endfor %}</div><footer><span><i class="fa-regular fa-user"></i>{{ r.researcher.display_name }}</span><span><i class="fa-regular fa-clock"></i>{{ r.updated_at|date:'Y/m/d' }}</span><span><i class="fa-solid fa-font"></i>{{ r.word_count }} واژه</span></footer>
+    </article>
+    {% empty %}<div class="empty-search"><i class="fa-solid fa-magnifying-glass-minus"></i><h3>نتیجه‌ای پیدا نشد</h3><p>شرط‌ها را کمتر کنید یا شکل دیگری از کلمات را امتحان کنید.</p></div>{% endfor %}
+  </div>
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4" aria-label="صفحه‌بندی نتایج"><ul class="pagination justify-content-center flex-wrap">
+      {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{% if page_query %}{{ page_query }}&{% endif %}page={{ page_obj.previous_page_number }}">قبلی</a></li>{% endif %}
+      <li class="page-item disabled"><span class="page-link">صفحه {{ page_obj.number }} از {{ paginator.num_pages }}</span></li>
+      {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{% if page_query %}{{ page_query }}&{% endif %}page={{ page_obj.next_page_number }}">بعدی</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
+  </div>
+  <div class="col-xl-3"><aside class="search-facets">
+    <section class="panel-card mb-3"><div class="panel-heading compact"><div><span class="section-kicker">Facet کل نتایج</span><h3>موضوعات نتایج</h3></div></div><div class="facet-list">{% for item in topic_facets %}{% if subject_type_id %}<a class="d-flex justify-content-between" href="?{% if page_query %}{{ page_query }}&{% endif %}filter_type={{ subject_type_id }}&filter_value={{ item.topic_id }}"><span>{{ item.topic__title }}</span><b>{{ item.total }}</b></a>{% else %}<div><span>{{ item.topic__title }}</span><b>{{ item.total }}</b></div>{% endif %}{% empty %}<small class="text-muted">داده‌ای موجود نیست.</small>{% endfor %}</div></section>
+    <section class="panel-card"><div class="panel-heading compact"><div><span class="section-kicker">Facet کل نتایج</span><h3>جنس محتوا</h3></div></div><div class="facet-list">{% for item in kind_facets %}{% if content_kind_type_id %}<a class="d-flex justify-content-between" href="?{% if page_query %}{{ page_query }}&{% endif %}filter_type={{ content_kind_type_id }}&filter_value={{ item.content_kind_id }}"><span>{{ item.content_kind__title }}</span><b>{{ item.total }}</b></a>{% else %}<div><span>{{ item.content_kind__title }}</span><b>{{ item.total }}</b></div>{% endif %}{% empty %}<small class="text-muted">داده‌ای موجود نیست.</small>{% endfor %}</div></section>
+  </aside></div>
+</div>
+{% endif %}
+{{ selected_filters|json_script:'selected-filter-data' }}
+<script type="application/json" id="index-types-data">[{% for t in index_types %}{"id":{{ t.pk }},"text":"{{ t.name|escapejs }}","slug":"{{ t.slug }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+{% endblock %}
+{% block scripts %}<script>
+ZohaSearch.init({types:JSON.parse(document.getElementById('index-types-data').textContent),filters:JSON.parse(document.getElementById('selected-filter-data').textContent)});
+(function(){
+  const boxes=[...document.querySelectorAll('.project-result-checkbox')], count=document.querySelector('[data-selected-count]'), submit=document.querySelector('[data-project-add-submit]');
+  const update=()=>{const total=boxes.filter(x=>x.checked).length;if(count)count.textContent=new Intl.NumberFormat('fa-IR').format(total);if(submit)submit.disabled=!total;};boxes.forEach(x=>x.addEventListener('change',update));update();
+  const collapse=document.getElementById('supplementaryFilters'),label=document.querySelector('[data-collapse-label]');
+  if(collapse&&label){const refresh=()=>label.textContent=collapse.classList.contains('show')?'مخفی‌کردن پالایش تکمیلی':'نمایش پالایش تکمیلی';collapse.addEventListener('shown.bs.collapse',refresh);collapse.addEventListener('hidden.bs.collapse',refresh);refresh();}
+})();
+</script>{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}مدیریت سبک‌های منبر | ضحی آنلاین{% endblock %}
+{% block page_title %}مدیریت سبک‌های منبر{% endblock %}
+{% block eyebrow %}تعریف لحن، ساختار و دستور هوش مصنوعی برای منبرسازی{% endblock %}
+{% block content %}
+<div class="row g-4 align-items-start">
+  <div class="col-xl-5">
+    <section class="panel-card sermon-style-form-card sticky-xl-top" style="top:96px">
+      <div class="panel-heading"><div><span class="section-kicker">{% if editing_style %}ویرایش سبک{% else %}سبک تازه{% endif %}</span><h3>{% if editing_style %}{{ editing_style.name }}{% else %}تعریف سبک منبر{% endif %}</h3><p class="text-muted mb-0">این اطلاعات مستقیماً وارد دستور تولید منبر توسط هوش مصنوعی می‌شود.</p></div><i class="fa-solid fa-microphone-lines panel-heading-icon"></i></div>
+      <form method="post" class="row g-3">{% csrf_token %}<input type="hidden" name="action" value="save_style">{% if editing_style %}<input type="hidden" name="style_id" value="{{ editing_style.pk }}">{% endif %}
+        {% for field in form %}
+          <div class="{% if field.name == 'description' or field.name == 'system_prompt' or field.name == 'outline_template' or field.name == 'audience_guidance' %}col-12{% else %}col-md-6{% endif %}">
+            {% if field.field.widget.input_type == 'checkbox' %}<label class="form-check sermon-check-card">{{ field }}<span><b>{{ field.label }}</b>{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}</span></label>
+            {% else %}<label class="form-label {% if field.field.required %}required{% endif %}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="form-help">{{ field.help_text }}</div>{% endif %}{% endif %}
+            {{ field.errors }}
+          </div>
+        {% endfor %}
+        <div class="col-12 d-flex gap-2 justify-content-end"><a class="btn btn-light" href="{% url 'sermon_style_management' %}">فرم تازه</a><button class="btn btn-primary"><i class="fa-solid fa-floppy-disk ms-2"></i>ذخیره سبک</button></div>
+      </form>
+    </section>
+  </div>
+  <div class="col-xl-7">
+    <section class="panel-card">
+      <div class="panel-heading"><div><span class="section-kicker">کتابخانه سبک‌ها</span><h3>سبک‌های قابل استفاده در پروژه‌ها</h3><p class="text-muted mb-0">سبک پیش‌فرض زمانی استفاده می‌شود که پروژه سبک مشخصی نداشته باشد.</p></div><span class="panel-badge">{{ styles|length }} سبک</span></div>
+      <div class="sermon-style-list">
+        {% for style in styles %}
+        <article class="sermon-style-card {% if not style.is_active %}is-inactive{% endif %}">
+          <div class="sermon-style-card-head"><div><div class="d-flex flex-wrap gap-2 align-items-center"><h4>{{ style.name }}</h4>{% if style.is_default %}<span class="status-pill status-approved">پیش‌فرض</span>{% endif %}{% if not style.is_active %}<span class="status-pill status-rejected">غیرفعال</span>{% endif %}</div><small>{{ style.slug }}</small></div><span class="sermon-duration"><i class="fa-regular fa-clock"></i>{{ style.duration_minutes }} دقیقه</span></div>
+          <p>{{ style.description|default:'بدون توضیح' }}</p>
+          <div class="sermon-style-meta"><span><i class="fa-solid fa-volume-high"></i>{{ style.tone|default:'لحن آزاد' }}</span><span><i class="fa-solid fa-language"></i>{{ style.language_level|default:'سطح آزاد' }}</span><span><i class="fa-solid fa-diagram-project"></i>{{ style.project_count }} پروژه</span></div>
+          <details><summary>مشاهده دستور و ساختار</summary><div class="sermon-style-details"><h6>دستور هوش مصنوعی</h6><p>{{ style.system_prompt|linebreaksbr }}</p><h6>ساختار پیشنهادی</h6><p>{{ style.outline_template|default:'—'|linebreaksbr }}</p></div></details>
+          <div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-sm btn-soft-primary" href="?edit={{ style.pk }}"><i class="fa-solid fa-pen ms-1"></i>ویرایش</a><form method="post" action="{% url 'sermon_style_toggle' style.pk %}">{% csrf_token %}<input type="hidden" name="action" value="toggle"><button class="btn btn-sm btn-outline-secondary">{% if style.is_active %}غیرفعال‌سازی{% else %}فعال‌سازی{% endif %}</button></form>{% if not style.is_default %}<form method="post" action="{% url 'sermon_style_toggle' style.pk %}">{% csrf_token %}<input type="hidden" name="action" value="default"><button class="btn btn-sm btn-outline-success">انتخاب به‌عنوان پیش‌فرض</button></form>{% endif %}</div>
+        </article>
+        {% empty %}<div class="empty-state"><i class="fa-solid fa-microphone-slash"></i><h3>سبکی تعریف نشده است</h3><p>اولین سبک را از فرم کناری ایجاد کنید.</p></div>{% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

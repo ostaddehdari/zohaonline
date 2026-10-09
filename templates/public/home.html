@@ -1,0 +1,22 @@
+{% extends 'public/base_public.html' %}{% load static %}
+{% block head %}<link href="{% static 'css/revision5.css' %}" rel="stylesheet">{% endblock %}
+{% block title %}ضحی آنلاین | درگاه جامع محتوای تبلیغی{% endblock %}
+{% block content %}
+<main class="v5-home">
+ <section class="v5-hero">
+  <div class="v5-ornament" aria-hidden="true"><span></span><i class="fa-solid fa-diamond"></i><span></span></div>
+  <p class="v5-kicker">درگاه جامع محتوای تبلیغی</p>
+  <h1>سلام، شما الان به چه محتوای تبلیغی نیاز دارید؟</h1>
+  <p>میان فیش‌ها، منبرها، درس‌ها، کتاب‌ها، مقالات، صوت و تصویر، شخصیت‌ها، موضوعات و مناسبت‌ها جست‌وجو کنید.</p>
+  <form class="v5-omni" action="{% url 'public_search' %}" method="get" role="search"><i class="fa-solid fa-magnifying-glass"></i><input name="q" autocomplete="off" aria-label="جست‌وجوی سراسری" placeholder="موضوع، کلیدواژه، شخصیت، منبع یا مناسبت…"><button>جست‌وجو</button></form>
+  <div class="v5-quick-links"><a href="{% url 'public_search' %}">فیش اتمیک</a><a href="{% url 'full_content_list' %}">منبر و محتوای کامل</a><a href="{% url 'education_list' %}">درسنامه</a><a href="{% url 'public_topics' %}">موضوعات</a></div>
+ </section>
+ <section class="v5-gateways" aria-label="درگاه‌های محتوا">
+  <a class="v5-gateway" href="{% url 'public_search' %}"><span class="v5-gateway-icon"><i class="fa-regular fa-lightbulb"></i></span><div><small>فیش‌های اتمیک و موضوعی</small><h2>محتوای مولد</h2><p>بانک فیش‌های خام و دسته‌بندی‌شده شامل آیات، روایات، اشعار، حکایات و تمثیل‌ها؛ آماده تولید منبر و محتوا.</p></div><ul><li>فیش‌های تفسیری و روایی</li><li>تمثیلات و داستان‌های تبلیغی</li><li>نظام موضوعی دقیق</li></ul><span class="v5-enter">ورود به درگاه <i class="fa-solid fa-arrow-left"></i></span></a>
+  <a class="v5-gateway" href="{% url 'full_content_list' %}"><span class="v5-gateway-icon"><i class="fa-solid fa-layer-group"></i></span><div><small>منبرهای آماده و بسته‌های موضوعی</small><h2>محتوای ترکیبی</h2><p>طرح‌درس‌ها، فیش‌های ترکیبی و منابر دسته‌بندی‌شده بر اساس مناسبت‌ها، مخاطبان و سیرهای موضوعی.</p></div><ul><li>منبرهای کامل و چندبخشی</li><li>بسته‌های مناسبتی</li><li>سیر مطالعاتی چندرسانه‌ای</li></ul><span class="v5-enter">ورود به درگاه <i class="fa-solid fa-arrow-left"></i></span></a>
+  <a class="v5-gateway" href="{% url 'public_search' %}#filters"><span class="v5-gateway-icon"><i class="fa-solid fa-book-open-reader"></i></span><div><small>کتابخانه تخصصی و فیلترهای چندبعدی</small><h2>محتوای پشتیبان</h2><p>دسترسی به اسناد، کتب مرجع، مقالات، فایل‌های صوتی و تصویری با پالایش سریع و کاربردی.</p></div><ul><li>کتب، مقالات، صوت و تصویر</li><li>فیلتر علمی، مخاطب و قالب</li><li>منابع پشتیبان منبر</li></ul><span class="v5-enter">ورود به درگاه <i class="fa-solid fa-arrow-left"></i></span></a>
+ </section>
+ <section class="v5-value"><div class="v5-value-head"><small>یک تجربه منسجم از جست‌وجو تا ارائه</small><h2>چرا ضحی آنلاین؟</h2></div><div class="v5-values"><article><i class="fa-solid fa-magnifying-glass"></i><h3>جست‌وجوی یکپارچه</h3><p>دسترسی هم‌زمان به همه محتواها</p></article><article><i class="fa-solid fa-diagram-project"></i><h3>ساختار موضوعی</h3><p>نمایه‌گذاری چندلایه و مفهومی</p></article><article><i class="fa-solid fa-user-group"></i><h3>متناسب با مخاطب</h3><p>انتخاب سن، نقش و سطح علمی</p></article><article><i class="fa-solid fa-bookmark"></i><h3>ذخیره و سازمان‌دهی</h3><p>مجموعه و پروژه تبلیغی شخصی</p></article></div>{% if user.is_authenticated %}<a class="v5-join" href="{% url 'dashboard' %}">ورود به میزکار <i class="fa-solid fa-arrow-left"></i></a>{% else %}<a class="v5-join" href="{% url 'signup' %}">عضویت رایگان در ضحی <i class="fa-solid fa-arrow-left"></i></a>{% endif %}</section>
+ {% include 'public/partials/fish_row.html' with title='محتوای منتخب' icon='fa-star' items=featured %}
+</main>
+{% endblock %}

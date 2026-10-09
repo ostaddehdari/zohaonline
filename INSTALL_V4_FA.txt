@@ -1,0 +1,38 @@
+نصب یا ارتقای ضحی آنلاین نسخه ۴.۰
+================================
+
+۱) انتقال فایل از Windows PowerShell:
+
+scp -P 2233 "D:\zip\ZohaOnline_Revision4_v4.0.1_Installer.zip" root@5.61.27.185:/root/zohaonline/
+
+اگر کلید SSH دارید:
+
+scp -i "$env:USERPROFILE\.ssh\id_ed25519_vps" -P 2233 "D:\zip\ZohaOnline_Revision4_v4.0.1_Installer.zip" root@5.61.27.185:/root/zohaonline/
+
+۲) ورود به سرور و استخراج:
+
+ssh -p 2233 root@5.61.27.185
+mkdir -p /root/zohaonline/revision4
+cd /root/zohaonline/revision4
+unzip -o ../ZohaOnline_Revision4_v4.0.1_Installer.zip
+cd ZohaOnline_Revision4_v4.0.1_Django
+chmod +x install_or_upgrade_zoha.sh diagnose.sh
+
+۳) نصب یا ارتقا:
+
+sudo env APP_DIR=/opt/zohaonline SERVER_IP=5.61.27.185 URL_PREFIX=zohaonline bash install_or_upgrade_zoha.sh
+
+این نصب قبل از تغییر، از برنامه، دیتابیس PostgreSQL، فایل .env و Nginx نسخه پشتیبان می‌گیرد. اطلاعات کاربران، رمزها، رسانه‌های قبلی و دیتابیس حفظ می‌شوند.
+
+۴) کنترل نتیجه:
+
+curl -fsS http://127.0.0.1:18123/zohaonline/version/
+systemctl status zohaonline --no-pager
+journalctl -u zohaonline -n 100 --no-pager
+nginx -t
+
+نشانی برنامه:
+https://5.61.27.185/zohaonline/
+
+در خروجی version باید این نشان دیده شود:
+ZOHA-REVISION-4-401

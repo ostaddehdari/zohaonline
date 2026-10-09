@@ -1,0 +1,52 @@
+{% extends 'base.html' %}{% load zoha_dates %}{% block title %}{{ item.title }} | محتوای کامل{% endblock %}{% block content %}
+<section class="detail-hero"><div><span class="status-pill">{{ item.get_content_kind_display }}</span><h2 class="mt-2">{{ item.title }}</h2><div class="detail-meta"><span>{{ item.word_count }} واژه</span>{% if item.duration_minutes %}<span>{{ item.duration_minutes }} دقیقه</span>{% endif %}{% if presentation_date_jalali %}<span>{{ presentation_date_jalali }}</span>{% endif %}</div></div><a class="btn btn-light" href="{% url 'full_content_edit' item.pk %}"><i class="fa-solid fa-pen ms-2"></i>ویرایش</a></section>
+<div class="row g-4 mt-1"><div class="col-lg-8"><section class="panel-card"><article class="research-body"><!-- ZOHA-W2.1-PARAGRAPHS:START -->
+<div class="zoha-full-content-body zoha-preserve-paragraphs">{% semantic_content item.body item.ai_segments item.external_references %}</div>
+<!-- ZOHA-W2.1-PARAGRAPHS:END --></article>{% if item.file %}<a class="btn btn-outline-primary mt-3" href="{{ item.file.url }}" target="_blank"><i class="fa-solid fa-download ms-2"></i>دریافت فایل</a>{% endif %}</section></div><div class="col-lg-4"><section class="panel-card"><dl class="detail-list"><div><dt>موضوع</dt><dd>{{ item.topic|default:'—' }}</dd></div><div><dt>محمول</dt><dd>{{ item.predicate|default:'—' }}</dd></div><div><dt>صاحب اثر</dt><dd>{{ item.author_owner|default:'—' }}</dd></div><div><dt>مکان ارائه/انتشار</dt><dd>{{ item.presentation_place|default:'—' }}</dd></div><div><dt>مخاطب</dt><dd>{{ item.audience_profiles|join:'، '|default:'—' }}</dd></div></dl><div class="chip-list">{% for x in item.processing_keys.all %}<span>{{ x.title }}</span>{% endfor %}{% for x in item.characters.all %}<span>{{ x.title }}</span>{% endfor %}{% for x in item.occasions.all %}<span>{{ x.display_label }}</span>{% endfor %}</div></section></div></div>
+<!-- ZOHA-W2.1-STYLE:START -->
+<style>
+/*
+ * FullContent paragraph preservation
+ *
+ * pre-wrap:
+ * - newlineهای متن ساده را نگه می‌دارد
+ * - فاصله پاراگراف‌ها را از بین نمی‌برد
+ * - HTML موجود را هم از بین نمی‌برد
+ */
+.zoha-full-content-body.zoha-preserve-paragraphs {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    line-height: 2;
+}
+
+/*
+ * اگر body از Editor به صورت HTML ذخیره شده باشد،
+ * پاراگراف‌های واقعی فاصله خوانا داشته باشند.
+ */
+.zoha-full-content-body.zoha-preserve-paragraphs p {
+    margin-top: 0;
+    margin-bottom: 1.15rem;
+}
+
+.zoha-full-content-body.zoha-preserve-paragraphs p:last-child {
+    margin-bottom: 0;
+}
+
+.zoha-full-content-body.zoha-preserve-paragraphs br {
+    content: "";
+}
+
+/*
+ * لیست‌ها نیز فاصله خوانا داشته باشند.
+ */
+.zoha-full-content-body.zoha-preserve-paragraphs ul,
+.zoha-full-content-body.zoha-preserve-paragraphs ol {
+    white-space: normal;
+    margin-top: .75rem;
+    margin-bottom: 1rem;
+}
+</style>
+<!-- ZOHA-W2.1-STYLE:END -->
+
+{% endblock %}

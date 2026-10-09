@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% if research %}ویرایش فیش{% else %}ثبت فیش جدید{% endif %} | ضحی آنلاین{% endblock %}
+{% block page_title %}{% if research %}ویرایش فیش{% else %}ثبت فیش جدید{% endif %}{% endblock %}
+{% block eyebrow %}کارگاه ثبت و نمایه‌سازی فیش تبلیغی{% endblock %}
+{% block head %}
+<link href="{% static 'css/zoha_editor_270.css' %}" rel="stylesheet">
+<link href="{% static 'css/revision4.css' %}" rel="stylesheet">
+<style id="zoha-editor-critical-css">{% include 'research/partials/zoha_editor_270_critical.css' %}</style>
+{% endblock %}
+{% block content %}
+<div class="fish-workbench">
+  <form method="post" enctype="multipart/form-data" id="fishForm" novalidate data-dirty-guard {% if research %}data-autosave-url="{% url 'research_autosave' research.pk %}"{% endif %}>
+    {% csrf_token %}
+    {{ form.topic_analyses_json }}{{ form.audiences_json }}{{ form.special_indexes_json }}{{ form.duplicate_override }}
+
+    <div class="fish-workbench-head">
+      <div class="fish-breadcrumb"><a href="{% url 'research_list' %}">فیش‌های من</a><i class="fa-solid fa-angle-left"></i><span>{% if research %}ویرایش فیش{% else %}ثبت فیش جدید{% endif %}</span></div>
+      <div class="save-indicator" id="saveIndicator"><i class="fa-solid fa-circle-check"></i><span>{% if research %}آخرین ذخیره {{ research.updated_at|timesince }} پیش{% else %}آماده ثبت{% endif %}</span></div>
+    </div>
+
+    <div class="fish-form-shell">
+      <aside class="fish-form-guide">
+        <div class="guide-pattern"></div>
+        <div class="guide-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+        <h2>راهنمای ثبت فیش</h2>
+        <p>ثبت فیش در چهار مرحله انجام می‌شود و در هر مرحله می‌توانید پیش‌نویس را ذخیره کنید.</p>
+        <ul class="guide-step-list">
+          <li><b>۱.</b> محتوای فیش — متن، جنس محتوا، خلاصه و کلیدواژه‌ها</li>
+          <li><b>۲.</b> منبع و نمایه‌سازی — موضوع، ریز موضوع، کلید پردازش، مخاطب و شخصیت</li>
+          <li><b>۳.</b> دسترسی و پیوست — سطح دسترسی، تصویر شاخص و فایل‌ها</li>
+          <li><b>۴.</b> بازبینی و ارسال — کنترل نهایی و ارسال برای ارزیابی</li>
+        </ul>
+        <div class="guide-insight"><strong>برداشت صحیح</strong><br>برداشت صحیح از محتوا زمانی شکل می‌گیرد که <b>موضوع</b>، <b>ریز موضوع</b> و <b>کلید پردازش</b> به‌درستی در کنار هم قرار بگیرند.</div>
+        <span class="guide-rule"></span>
+        <strong id="mobileStageLabel">مرحله ۱ از ۴</strong>
+        <div class="guide-dots"><i class="active"></i><i></i><i></i><i></i></div>
+        <img src="{% static 'img/form-books.jpg' %}" alt="کتاب و قلم" class="guide-books">
+      </aside>
+
+      <main class="fish-form-main">
+        <div class="fish-form-intro">
+          <h1>{% if research %}{% if research.status == 'changes_requested' %}اصلاح فیش{% else %}ویرایش فیش{% endif %}{% else %}ثبت فیش جدید{% endif %}</h1>
+          <p>محتوای تبلیغی خود را ثبت کنید و برای استفاده و جست‌وجوی بهتر، اطلاعات تکمیلی را مرحله‌به‌مرحله بیفزایید.</p>
+          {% if research.status == 'changes_requested' %}<div class="reviewer-return-note"><i class="fa-solid fa-circle-exclamation"></i><div><strong>این فیش نیازمند اصلاح است.</strong><span>توضیحات ناظر را بررسی کنید و پس از اصلاح دوباره برای بررسی ارسال نمایید.</span></div></div>{% endif %}
+        </div>
+
+        <div class="fish-stepper" role="tablist" aria-label="مراحل ثبت فیش">
+          <button type="button" class="fish-step active" data-stage-go="1"><b>۱</b><span>محتوای فیش</span></button>
+          <i></i><button type="button" class="fish-step" data-stage-go="2"><b>۲</b><span>منبع و نمایه‌سازی</span></button>
+          <i></i><button type="button" class="fish-step" data-stage-go="3"><b>۳</b><span>دسترسی و پیوست</span></button>
+          <i></i><button type="button" class="fish-step" data-stage-go="4"><b>۴</b><span>بازبینی و ارسال</span></button>
+        </div>
+
+        {% if form.errors %}
+        <div class="form-error-summary" role="alert"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>بعضی اطلاعات نیاز به اصلاح دارند.</strong><span>پیام هر خطا کنار همان بخش نمایش داده شده است.</span>{{ form.non_field_errors }}</div></div>
+        {% endif %}
+
+        <section class="form-stage active" data-stage="1">
+          <div class="stage-heading"><span>۱</span><div><h2>محتوای فیش</h2><p>فقط «متن اصلی» اجباری است. سایر اطلاعات را در صورت نیاز تکمیل کنید.</p></div></div>
+
+          <div class="form-field-block">
+            <div class="field-title-row"><label for="{{ form.title.id_for_label }}">عنوان فیش <small>اختیاری</small></label><span class="char-counter" data-counter-for="{{ form.title.id_for_label }}">۰/۱۶۰</span></div>
+            {{ form.title }}{{ form.title.errors }}
+            <div id="similarTitles" class="similar-box d-none mt-2"></div>
+          </div>
+
+          <div class="form-field-block">
+            <div class="field-title-row"><label>جنس محتوا <small>اختیاری</small></label><div class="field-tools"><button type="button" data-add-option="content-kind" data-target="#{{ form.content_kind.id_for_label }}"><i class="fa-solid fa-plus"></i> افزودن</button><button type="button" data-edit-selected data-target="#{{ form.content_kind.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i> ویرایش</button></div></div>
+            <div class="native-shadow-field">{{ form.content_kind }}</div>
+            <div class="content-kind-pills" id="contentKindPills">
+              {% for item in content_kind_options %}<button type="button" data-kind-id="{{ item.id }}" class="{% if form.content_kind.value|stringformat:'s' == item.id|stringformat:'s' %}selected{% endif %}"><i class="fa-regular {% if 'آیه' in item.title %}fa-book-open{% elif 'روایت' in item.title or 'حدیث' in item.title %}fa-message{% elif 'شعر' in item.title %}fa-pen-nib{% elif 'داستان' in item.title %}fa-book{% elif 'تمثیل' in item.title %}fa-scale-balanced{% else %}fa-file-lines{% endif %}"></i>{{ item.title }}</button>{% endfor %}
+            </div>{{ form.content_kind.errors }}
+          </div>
+
+          <div class="form-field-block index-tone kind-tone" id="contentCategoryBlock">
+            <div class="field-title-row"><label>ریز جنس محتوا <small>وابسته به جنس محتوا و اختیاری</small></label><div class="field-tools"><button type="button" data-add-option="content-category" data-target="#{{ form.content_category.id_for_label }}" data-parent-select="#{{ form.content_kind.id_for_label }}"><i class="fa-solid fa-plus"></i> افزودن</button><button type="button" data-edit-selected data-target="#{{ form.content_category.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i> ویرایش</button></div></div>
+            {{ form.content_category }}{{ form.content_category.errors }}
+          </div>
+
+          <div class="form-field-block body-field">
+            <label class="required" for="{{ form.body.id_for_label }}">متن اصلی فیش</label>
+            <div class="rich-editor-shell" id="zohaEditorMount">{{ form.body }}</div>{{ form.body.errors }}
+            <div id="zohaEditorBootStatus" class="editor-status"><i class="fa-solid fa-spinner fa-spin"></i> در حال راه‌اندازی ویرایشگر…</div>
+          </div>
+
+          <div class="form-field-block"><label>خلاصه فیش <small>اختیاری</small></label>{{ form.abstract }}{{ form.abstract.errors }}<p class="field-help">در نمایش نهایی فیش، خلاصه پیش از متن اصلی نمایش داده می‌شود.</p></div>
+          <div class="form-field-block"><label>کلمات کلیدی <small>اختیاری</small></label>{{ form.search_keywords }}{{ form.search_keywords.errors }}<p class="field-help">فقط واژه‌های خاصی را وارد کنید که عیناً در متن اصلی وجود دارند و در موضوع، ریز موضوع یا سایر نمایه‌ها تکرار نشده‌اند.</p></div>
+          <div class="form-field-block"><label>توضیحات نویسنده <small>اختیاری</small></label>{{ form.author_explanation }}{{ form.author_explanation.errors }}<p class="field-help">برای درک بهتر متن، پاسخ به شبهات احتمالی یا بیان چالش‌های مرتبط.</p></div>
+        </section>
+
+        <section class="form-stage" data-stage="2">
+          <div class="stage-heading"><span>۲</span><div><h2>منبع و نمایه‌سازی</h2><p>منبع، موضوعات، مخاطب و کاربرد تبلیغی را در صورت نیاز ثبت کنید.</p></div></div>
+
+          <div class="stage-subtitle"><span></span><h3>منبع</h3><span></span></div>
+          <div class="source-primary-grid">
+            <div class="form-field-block"><div class="field-title-row"><label>نوع منبع</label><div class="field-tools"><button type="button" data-add-option="source-type" data-target="#{{ form.source_type.id_for_label }}"><i class="fa-solid fa-plus"></i></button><button type="button" data-edit-selected data-target="#{{ form.source_type.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i></button></div></div>{{ form.source_type }}{{ form.source_type.errors }}</div>
+            <div class="form-field-block"><div class="field-title-row"><label>نام منبع</label><div class="field-tools"><button type="button" data-add-source data-target="#{{ form.source.id_for_label }}"><i class="fa-solid fa-plus"></i> افزودن</button><button type="button" data-edit-source-selected data-target="#{{ form.source.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i> ویرایش</button></div></div>{{ form.source }}{{ form.source.errors }}</div>
+          </div>
+          <details class="source-details" {% if form.source_volume.value or form.source_page.value or form.source_narrator.value or form.source_url.value or form.source_note.value %}open{% endif %}><summary><i class="fa-solid fa-circle-plus"></i> توضیحات منبع</summary><div class="source-detail-grid"><div><label>جلد</label>{{ form.source_volume }}{{ form.source_volume.errors }}</div><div><label>صفحه</label>{{ form.source_page }}{{ form.source_page.errors }}</div><div><label>راوی</label>{{ form.source_narrator }}{{ form.source_narrator.errors }}</div><div><label>پیوند اینترنتی</label>{{ form.source_url }}{{ form.source_url.errors }}</div><div class="wide"><label>توضیح تکمیلی</label>{{ form.source_note }}{{ form.source_note.errors }}</div></div></details>
+
+          <div class="stage-subtitle"><span></span><h3>قالب و ساختار</h3><span></span></div>
+          <div class="two-col-fields"><div class="form-field-block"><div class="field-title-row"><label>قالب اصلی فیش</label><div class="field-tools"><button type="button" data-add-option="main-format" data-target="#{{ form.main_format.id_for_label }}"><i class="fa-solid fa-plus"></i></button><button type="button" data-edit-selected data-target="#{{ form.main_format.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i></button></div></div>{{ form.main_format }}{{ form.main_format.errors }}</div><div class="form-field-block"><div class="field-title-row"><label>ریزقالب</label><div class="field-tools"><button type="button" data-add-option="content-subformat" data-target="#{{ form.sub_format.id_for_label }}" data-parent-select="#{{ form.main_format.id_for_label }}"><i class="fa-solid fa-plus"></i></button><button type="button" data-edit-selected data-target="#{{ form.sub_format.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i></button></div></div>{{ form.sub_format }}{{ form.sub_format.errors }}</div></div>
+
+          <div class="stage-subtitle"><span></span><h3>موضوعات انتخاب‌شده</h3><span></span></div>
+          <div class="topic-toolbar"><p>انتخاب موضوع اختیاری است. پس از افزودن، موضوع در کارت جداگانه نمایش داده می‌شود و کلید پردازش، ریز موضوع و برداشت نویسنده نیز اختیاری‌اند.</p><button class="btn-zoha-outline" type="button" id="addTopicAnalysis"><i class="fa-solid fa-plus"></i> افزودن موضوع</button></div>
+          <div id="topicAnalyses" class="topic-analysis-list"></div>{{ form.topic_analyses_json.errors }}
+
+          <div class="stage-subtitle"><span></span><h3>کاربردهای تبلیغی</h3><span></span></div>
+          <div class="special-index-box" data-special-group="promotional-usage">
+            <div class="special-index-help"><i class="fa-solid fa-bullseye"></i><span>می‌توانید چند کاربرد انتخاب کنید و یکی را به‌عنوان «کاربرد اصلی» مشخص کنید.</span><div class="field-tools"><button type="button" data-add-option="promotional-usage" data-target="#specialUsageDummy"><i class="fa-solid fa-plus"></i> افزودن</button></div></div>
+            <select id="specialUsageDummy" class="d-none"></select>
+            {% for group in usage_groups %}<div class="usage-group"><div class="usage-group-title"><label><input type="checkbox" data-special-item="promotional-usage" value="{{ group.id }}"><b>{{ group.title }}</b></label><label class="primary-choice"><input type="radio" name="primary-promotional-usage" data-special-primary="promotional-usage" value="{{ group.id }}"> اصلی</label>{% if group.visibility == 'private' %}<button type="button" data-edit-special="{{ group.id }}"><i class="fa-regular fa-pen-to-square"></i></button>{% endif %}</div><div class="usage-children">{% for child in group.children %}<div><label><input type="checkbox" data-special-item="promotional-usage" value="{{ child.id }}">{{ child.title }}</label><label class="primary-choice"><input type="radio" name="primary-promotional-usage" data-special-primary="promotional-usage" value="{{ child.id }}"> اصلی</label>{% if child.visibility == 'private' %}<button type="button" data-edit-special="{{ child.id }}"><i class="fa-regular fa-pen-to-square"></i></button>{% endif %}</div>{% endfor %}</div></div>{% endfor %}
+          </div>
+
+
+          <div class="stage-subtitle"><span></span><h3>مخاطب</h3><span></span></div>
+          <div class="topic-toolbar"><p>می‌توانید «عموم مردم» یا مخاطب اختصاصی با ترکیب جنسیت، سن، صنف و اقلیم ثبت کنید. اقلیم شامل چند شهر یا کشور مرتبط با متن است.</p><button class="btn-zoha-outline" type="button" id="addAudience"><i class="fa-solid fa-user-plus"></i> افزودن مخاطب</button></div><div id="audienceProfiles" class="audience-list"></div>{{ form.audiences_json.errors }}
+
+          <div class="stage-subtitle"><span></span><h3>شخصیت و مناسبت</h3><span></span></div>
+          <div class="two-col-fields"><div class="form-field-block"><div class="field-title-row"><label>شخصیت اصلی</label><div class="field-tools"><button type="button" data-add-option="main-character" data-target="#{{ form.characters.id_for_label }}"><i class="fa-solid fa-plus"></i></button><button type="button" data-edit-selected data-target="#{{ form.characters.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i></button></div></div>{{ form.characters }}{{ form.characters.errors }}<p class="field-help">در داستان یا محتوایی که محور آن یک فرد است، شخصیت اصلی را اینجا ثبت کنید.</p></div><div class="form-field-block"><div class="field-title-row"><label>شخصیت فرعی / ناقل</label><div class="field-tools"><button type="button" data-add-option="main-character" data-target="#{{ form.secondary_characters.id_for_label }}"><i class="fa-solid fa-plus"></i></button><button type="button" data-edit-selected data-target="#{{ form.secondary_characters.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i></button></div></div>{{ form.secondary_characters }}{{ form.secondary_characters.errors }}<p class="field-help">برای راوی، ناقل یا شخصیت فرعی مرتبط با محتوا.</p></div></div><div class="two-col-fields"><div class="form-field-block"><div class="field-title-row"><label>مناسبت</label><div class="field-tools"><button type="button" data-add-option="occasion" data-target="#{{ form.occasions.id_for_label }}"><i class="fa-solid fa-plus"></i></button><button type="button" data-edit-selected data-target="#{{ form.occasions.id_for_label }}"><i class="fa-regular fa-pen-to-square"></i></button></div></div>{{ form.occasions }}{{ form.occasions.errors }}<p class="field-help">مناسبت‌ها در رابط بر اساس روز و ماه شمسی نمایش داده می‌شوند و چند مناسبت برای یک روز قابل ثبت است.</p></div><div></div></div>
+
+          {% if research and index_types %}<details class="supplementary-indexes"><summary>نمایه‌های تکمیلی پیشرفته</summary><div class="supp-index-grid">{% for t in index_types %}<button type="button" class="open-index-panel" data-url="{% url 'index_panel' research.pk t.pk %}"><span><i class="fa-solid fa-tag"></i>{{ t.name }}</span><b>{{ t.item_count }}</b></button>{% endfor %}</div></details>{% endif %}
+        </section>
+
+        <section class="form-stage" data-stage="3">
+          <div class="stage-heading"><span>۳</span><div><h2>سطح دسترسی</h2><p>این نسخه برای محتوای متنی بهینه شده است؛ صوت، تصویر و ویدیو تا آماده‌شدن زیرساخت ذخیره‌سازی غیرفعال‌اند.</p></div></div>
+          <div class="access-cards" id="accessCards">
+            <label data-access="private"><input type="radio" name="access_proxy" value="private"><i class="fa-solid fa-lock"></i><b>خصوصی</b><span>فقط شما به این فیش دسترسی دارید.</span></label>
+            <label data-access="team"><input type="radio" name="access_proxy" value="team"><i class="fa-solid fa-people-group"></i><b>گروه کاری</b><span>اعضای گروه مجاز می‌توانند فیش را ببینند.</span></label>
+            <label data-access="public"><input type="radio" name="access_proxy" value="public"><i class="fa-solid fa-globe"></i><b>عمومی پس از تأیید</b><span>پس از بررسی و انتشار در ویترین عمومی نمایش داده می‌شود.</span></label>
+          </div><div class="native-shadow-field">{{ form.access_level }}</div>{{ form.access_level.errors }}
+          <div id="teamAccessField" class="form-field-block {% if form.access_level.value != 'team' %}d-none{% endif %}"><label>گروه کاری</label>{{ form.team }}{{ form.team.errors }}</div>
+
+          <div class="text-only-notice"><i class="fa-solid fa-file-lines"></i><div><strong>ثبت محتوای متنی فعال است</strong><span>افزودن فایل صوتی، تصویر و ویدیو در نسخه زیرساخت رسانه فعال خواهد شد.</span></div></div>
+        </section>
+
+        <section class="form-stage" data-stage="4">
+          <div class="stage-heading"><span>۴</span><div><h2>بازبینی و ارسال</h2><p>پیش از ارسال، خلاصه اطلاعات فیش را مرور کنید. می‌توانید برای اصلاح به هر مرحله برگردید.</p></div></div>
+          <div class="review-card"><div class="review-head"><span id="reviewKind">فیش تبلیغی</span><h3 id="reviewTitle">فیش بدون عنوان</h3></div><div class="review-body" id="reviewBody">متن اصلی اینجا پیش‌نمایش داده می‌شود.</div><dl><div><dt>خلاصه</dt><dd id="reviewAbstract">—</dd></div><div><dt>منبع</dt><dd id="reviewSource">—</dd></div><div><dt>موضوعات و نمایه‌ها</dt><dd id="reviewIndexes">—</dd></div><div><dt>سطح دسترسی</dt><dd id="reviewAccess">—</dd></div></dl></div>
+          <div class="submit-note"><i class="fa-solid fa-circle-info"></i><p>متن اصلی باید ثبت شده باشد و در کنار آن حداقل یک نمایه یا دسته ساختاریافته وجود داشته باشد. عنوان، منبع و موضوع برای ذخیره پیش‌نویس اجباری نیستند.</p></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="fish-form-actions">
+      <div class="actions-secondary"><a href="{% if research %}{% url 'research_detail' research.pk %}{% else %}{% url 'research_list' %}{% endif %}" class="btn-cancel" data-form-cancel><i class="fa-solid fa-xmark"></i> انصراف</a><button type="submit" name="save_mode" value="draft" class="btn-draft"><i class="fa-regular fa-floppy-disk"></i> ذخیره پیش‌نویس</button><button type="button" class="btn-preview" data-preview-open><i class="fa-regular fa-eye"></i> پیش‌نمایش</button></div>
+      <div class="actions-primary"><button type="button" class="btn-prev d-none" data-stage-prev><i class="fa-solid fa-angle-right"></i> مرحله قبل</button><button type="button" class="btn-next" data-stage-next>ادامه و تکمیل نمایه‌ها <i class="fa-solid fa-angle-left"></i></button><button type="submit" name="save_mode" value="submit" class="btn-submit d-none" data-final-submit><i class="fa-solid fa-paper-plane"></i> ارسال برای بررسی</button></div>
+    </div>
+  </form>
+</div>
+
+{% if research and index_types %}<div class="offcanvas offcanvas-end index-offcanvas" tabindex="-1" id="indexOffcanvas"><div class="offcanvas-header"><div><span class="section-kicker">کتابخانه نمایه</span><h5 class="mb-0">مدیریت نمایه تکمیلی</h5></div><button class="btn-close" data-bs-dismiss="offcanvas"></button></div><div class="offcanvas-body" id="indexPanelBody"><div class="loading-state"><div class="spinner-border"></div><span>در حال بارگذاری…</span></div></div></div>{% endif %}
+
+<div class="modal fade" id="optionModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form id="optionModalForm"><div class="modal-header"><div><span class="section-kicker">مدیریت گزینه شخصی</span><h5 class="modal-title">افزودن مورد جدید</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" name="type"><input type="hidden" name="parent"><input type="hidden" name="force" value="0"><input type="hidden" name="edit_id" value=""><div class="mb-3"><label class="form-label required">عنوان</label><input class="form-control form-control-lg" name="title" maxlength="500" required autocomplete="off"></div><div class="mb-3"><label class="form-label">نام‌های جایگزین</label><textarea class="form-control" name="aliases" rows="3" placeholder="هر نام در یک خط"></textarea></div><div class="row g-2 d-none" id="occasionDateFields"><div class="col-4"><label class="form-label">روز شمسی</label><input class="form-control" name="jalali_day" inputmode="numeric" min="1" max="31" placeholder="۱۸"></div><div class="col-8"><label class="form-label">ماه شمسی</label><select class="form-select" name="jalali_month"><option value="">ماه</option><option>فروردین</option><option>اردیبهشت</option><option>خرداد</option><option>تیر</option><option>مرداد</option><option>شهریور</option><option>مهر</option><option>آبان</option><option>آذر</option><option>دی</option><option>بهمن</option><option>اسفند</option></select></div><p class="field-help col-12">برای مناسبت‌ها روز و ماه شمسی ثبت می‌شود؛ چند مناسبت می‌توانند یک روز مشترک داشته باشند.</p></div><div class="alert alert-warning d-none" id="optionSimilarWarning"></div><p class="modal-help">گزینه‌های شخصی توسط خود شما قابل ویرایش‌اند؛ گزینه‌های عمومی فقط توسط مدیر سامانه اصلاح می‌شوند.</p></div><div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button><button class="btn btn-primary" type="submit"><i class="fa-solid fa-check ms-2"></i><span>ذخیره گزینه</span></button></div></form></div></div></div>
+
+<div class="modal fade" id="sourceModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow-lg"><form id="sourceModalForm"><div class="modal-header"><div><span class="section-kicker">منبع ساختاریافته</span><h5 class="modal-title">افزودن منبع جدید</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" name="force" value="0"><input type="hidden" name="edit_id" value=""><div class="mb-3"><label class="form-label required">نام منبع</label><input class="form-control form-control-lg" name="title" required></div><div class="mb-3"><label class="form-label">پدیدآور یا شخص مرتبط</label><input class="form-control" name="author"></div><div class="mb-3"><label class="form-label">نام‌های جایگزین</label><textarea class="form-control" name="aliases" rows="3"></textarea></div><div class="alert alert-warning d-none" id="sourceSimilarWarning"></div></div><div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button><button class="btn btn-primary"><i class="fa-solid fa-check ms-2"></i><span>ذخیره منبع</span></button></div></form></div></div></div>
+
+<div class="modal fade" id="fishPreviewModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"><div class="modal-content preview-modal"><div class="modal-header"><h5 class="modal-title"><i class="fa-regular fa-eye ms-2"></i>پیش‌نمایش فیش</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="liveFishPreview"></div></div></div></div>
+
+{{ topic_options|json_script:'topic-options-data' }}
+{{ processing_options|json_script:'processing-options-data' }}
+{{ predicate_options|json_script:'predicate-options-data' }}
+{{ job_options|json_script:'job-options-data' }}
+{{ country_options|json_script:'country-options-data' }}
+{{ city_options|json_script:'city-options-data' }}
+{{ existing_analyses|json_script:'existing-analyses-data' }}
+{{ existing_audiences|json_script:'existing-audiences-data' }}
+{{ existing_special_indexes|json_script:'existing-special-indexes-data' }}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/zoha_editor_270.js' %}"></script>
+<!-- TEMP-DISABLED revision4.js -->
+<script>
+if (!window.ZohaHtmlEditor) { {% include 'research/partials/zoha_editor_270_inline.js' %} }
+(function bootZohaEditor(){
+ const textarea=document.getElementById('id_body'),status=document.getElementById('zohaEditorBootStatus');
+ if(!textarea)return; textarea.classList.add('rich-editor');
+ try{if(window.ZohaHtmlEditor&&!textarea.zohaHtmlEditor)window.ZohaHtmlEditor.create(textarea,{placeholder:'متن اصلی فیش را اینجا بنویسید یا وارد کنید…'});if(status){status.className='editor-status success';status.innerHTML='<i class="fa-solid fa-circle-check"></i> ویرایشگر آماده است';setTimeout(()=>status.remove(),1500);}}catch(e){if(status){status.className='editor-status error';status.textContent='ویرایشگر پیشرفته فعال نشد؛ نوشتن در فیلد اصلی همچنان ممکن است.';}}
+})();
+ZohaFishForm.init({formId:'fishForm',topics:JSON.parse(document.getElementById('topic-options-data').textContent),processing:JSON.parse(document.getElementById('processing-options-data').textContent),predicates:JSON.parse(document.getElementById('predicate-options-data').textContent),jobs:JSON.parse(document.getElementById('job-options-data').textContent),countries:JSON.parse(document.getElementById('country-options-data').textContent),cities:JSON.parse(document.getElementById('city-options-data').textContent),analyses:JSON.parse(JSON.parse(document.getElementById('existing-analyses-data').textContent)||'[]'),audiences:JSON.parse(JSON.parse(document.getElementById('existing-audiences-data').textContent)||'[]')});
+window.Zoha270Form?.init({specials:JSON.parse(JSON.parse(document.getElementById('existing-special-indexes-data').textContent)||'{}')});
+const seoBtn=document.getElementById('suggestSeoTags');
+seoBtn?.addEventListener('click', async()=>{const body=document.getElementById('id_body')?.value||'';seoBtn.disabled=true;const old=seoBtn.innerHTML;seoBtn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> در حال پیشنهاد…';try{const fd=new FormData();fd.append('body',body);fd.append('csrfmiddlewaretoken',document.querySelector('[name=csrfmiddlewaretoken]').value);const r=await fetch('{% url "api_seo_suggest" %}',{method:'POST',body:fd,headers:{'X-Requested-With':'XMLHttpRequest'}});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'خطا');document.getElementById('id_seo_tags_text').value=(j.tags||[]).join('، ');document.getElementById('id_seo_tags_text').dispatchEvent(new Event('change',{bubbles:true}));}catch(e){alert('پیشنهاد برچسب انجام نشد: '+e.message)}finally{seoBtn.disabled=false;seoBtn.innerHTML=old;}});
+const imageBtn=document.getElementById('generateFeaturedImage');
+imageBtn?.addEventListener('click',async()=>{const status=document.getElementById('featuredImageStatus');imageBtn.disabled=true;status.textContent='در حال تولید تصویر…';try{const fd=new FormData();fd.append('csrfmiddlewaretoken',document.querySelector('[name=csrfmiddlewaretoken]').value);const r=await fetch(imageBtn.dataset.url,{method:'POST',body:fd});const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||'خطا');status.innerHTML='تصویر تولید شد. <a target="_blank" href="'+j.url+'">مشاهده تصویر</a>';}catch(e){status.textContent='تولید تصویر انجام نشد: '+e.message;}finally{imageBtn.disabled=false;}});
+</script>
+
+<!-- ZOHA-W1.1-OTHER-LAST:START -->
+<script>
+(function () {
+    'use strict';
+
+    const OTHER_LABELS = new Set([
+        'سایر',
+        'ساير'
+    ]);
+
+    function normalizeText(value) {
+        return String(value || '')
+            .replace(/\u200c/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function isOtherText(value) {
+        return OTHER_LABELS.has(normalizeText(value));
+    }
+
+    /*
+     * Native <select>
+     * Move "سایر" to the final real option.
+     */
+    function sortSelect(select) {
+        if (!select || select.dataset.zohaOtherLastBusy === '1') {
+            return;
+        }
+
+        select.dataset.zohaOtherLastBusy = '1';
+
+        try {
+            const options = Array.from(select.options || []);
+
+            const others = options.filter(option => {
+                const text = normalizeText(option.textContent);
+                const value = normalizeText(option.value);
+
+                return isOtherText(text) ||
+                       value === 'other' ||
+                       value === 'OTHER';
+            });
+
+            for (const option of others) {
+                select.appendChild(option);
+            }
+        } finally {
+            delete select.dataset.zohaOtherLastBusy;
+        }
+    }
+
+    /*
+     * Custom option collections.
+     * We intentionally restrict this to common option containers
+     * used by the fish form; unrelated page sections are untouched.
+     */
+    function sortContainer(container) {
+        if (!container || container.dataset.zohaOtherLastBusy === '1') {
+            return;
+        }
+
+        const children = Array.from(container.children || []);
+
+        if (children.length < 2) {
+            return;
+        }
+
+        const candidateSelectors = [
+            'option',
+            '.form-check',
+            '.option-item',
+            '.option-card',
+            '.choice-item',
+            '.choice-card',
+            '[data-option-id]',
+            '[data-option-value]',
+            '[data-choice-id]'
+        ].join(',');
+
+        const optionChildren = children.filter(
+            child => child.matches && child.matches(candidateSelectors)
+        );
+
+        if (optionChildren.length < 2) {
+            return;
+        }
+
+        const otherItems = optionChildren.filter(child => {
+            const ownLabel =
+                child.getAttribute('data-label') ||
+                child.getAttribute('data-title') ||
+                child.getAttribute('data-name') ||
+                '';
+
+            if (isOtherText(ownLabel)) {
+                return true;
+            }
+
+            const label =
+                child.querySelector?.(
+                    '.form-check-label,' +
+                    '.option-label,' +
+                    '.choice-label,' +
+                    'label,' +
+                    '.title,' +
+                    '.name'
+                );
+
+            const labelText = normalizeText(
+                label ? label.textContent : child.textContent
+            );
+
+            return isOtherText(labelText);
+        });
+
+        if (!otherItems.length) {
+            return;
+        }
+
+        container.dataset.zohaOtherLastBusy = '1';
+
+        try {
+            for (const item of otherItems) {
+                container.appendChild(item);
+            }
+        } finally {
+            delete container.dataset.zohaOtherLastBusy;
+        }
+    }
+
+    function processRoot(root) {
+        if (!root) {
+            return;
+        }
+
+        if (root.matches && root.matches('select')) {
+            sortSelect(root);
+        }
+
+        root.querySelectorAll?.('select').forEach(sortSelect);
+
+        const containers = new Set();
+
+        root.querySelectorAll?.(
+            '.form-check,' +
+            '.option-item,' +
+            '.option-card,' +
+            '.choice-item,' +
+            '.choice-card,' +
+            '[data-option-id],' +
+            '[data-option-value],' +
+            '[data-choice-id]'
+        ).forEach(item => {
+            if (item.parentElement) {
+                containers.add(item.parentElement);
+            }
+        });
+
+        containers.forEach(sortContainer);
+    }
+
+    function scheduleProcess(root) {
+        window.requestAnimationFrame(() => {
+            processRoot(root || document);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        processRoot(document);
+
+        /*
+         * Fish form dynamically refreshes several option lists.
+         * MutationObserver keeps "سایر" at the end after every AJAX render.
+         */
+        const observer = new MutationObserver(function (mutations) {
+            for (const mutation of mutations) {
+                for (const node of mutation.addedNodes) {
+                    if (node && node.nodeType === Node.ELEMENT_NODE) {
+                        scheduleProcess(node);
+                    }
+                }
+
+                if (mutation.target &&
+                    mutation.target.nodeType === Node.ELEMENT_NODE) {
+                    scheduleProcess(mutation.target);
+                }
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        /*
+         * Also run after relevant select/filter changes because
+         * some parts of the form rebuild asynchronously.
+         */
+        document.addEventListener('change', function (event) {
+            if (event.target &&
+                (
+                    event.target.matches('select') ||
+                    event.target.closest('#topicAnalyses') ||
+                    event.target.classList.contains('predicate-filter')
+                )) {
+                setTimeout(() => processRoot(document), 0);
+            }
+        });
+    });
+
+    window.ZohaW11OtherLast = {
+        process: processRoot
+    };
+})();
+</script>
+<!-- ZOHA-W1.1-OTHER-LAST:END -->
+
+{% endblock %}

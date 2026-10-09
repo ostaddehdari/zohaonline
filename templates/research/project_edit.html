@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}{% if project %}{{ project.title }}{% else %}پروژه جدید{% endif %} | ضحی آنلاین{% endblock %}{% block page_title %}{% if project %}ویرایش پروژه تبلیغی{% else %}ایجاد پروژه تبلیغی{% endif %}{% endblock %}{% block eyebrow %}مدیریت فیش‌ها، هدف و نمایه‌های پروژه{% endblock %}
+{% block content %}
+<div class="project-editor-shell">
+  <section class="panel-card project-main-form">
+    <div class="panel-heading"><div><span class="section-kicker">مشخصات پروژه</span><h3>{% if project %}{{ project.title }}{% else %}پروژه تبلیغی جدید{% endif %}</h3></div>{% if project %}<span class="panel-badge"><i class="fa-solid fa-layer-group"></i> {{ project.research_count }} فیش</span>{% endif %}</div>
+    <form method="post" class="project-form-grid">{% csrf_token %}<input type="hidden" name="action" value="save_project">
+      {% for field in form %}{% if field.is_hidden %}{{ field }}{% else %}<div class="project-field {% if field.name == 'description' or field.name == 'objective' or field.name == 'sermon_style' %}project-field-wide{% endif %}"><div class="d-flex justify-content-between align-items-center gap-2"><label class="form-label">{{ field.label }}</label>{% if field.name == 'sermon_style' %}{% if user.is_superuser or is_zoha_admin %}<a class="btn btn-add-inline" href="{% url 'sermon_style_management' %}"><i class="fa-solid fa-sliders"></i> مدیریت سبک‌ها</a>{% endif %}{% endif %}</div>{{ field }}{% if field.help_text %}<div class="form-help">{{ field.help_text }}</div>{% endif %}{{ field.errors }}{% if field.name == 'sermon_style' %}<div class="sermon-style-project-note"><i class="fa-solid fa-microphone-lines"></i><span>سبک انتخاب‌شده به‌صورت خودکار در منبرساز هوش مصنوعی اعمال می‌شود و مدیر می‌تواند جزئیات آن را ویرایش کند.</span></div>{% endif %}</div>{% endif %}{% endfor %}
+      <section class="project-field-wide project-audience-studio">
+        <div class="project-audience-studio-head"><div><span class="section-kicker">مخاطب‌شناسی ساختاریافته</span><h3>مخاطبان اصلی و تکمیلی پروژه</h3><p>جنسیت، سن، نقش اجتماعی، اقلیم، سطح آشنایی، بستر ارائه و نیاز اصلی هر گروه را جداگانه مشخص کنید.</p></div><button class="btn btn-soft-primary" type="button" id="addProjectAudience"><i class="fa-solid fa-user-plus ms-2"></i>افزودن گروه مخاطب</button></div>
+        <div id="projectAudienceProfiles" class="project-audience-profiles"></div>
+      </section>
+      <div class="project-field-wide d-flex flex-wrap gap-2 justify-content-end"><a class="btn btn-light" href="{% url 'project_list' %}">بازگشت</a><button class="btn btn-primary"><i class="fa-solid fa-floppy-disk ms-2"></i>ذخیره پروژه و مخاطبان</button></div>
+    </form>
+  </section>
+
+  {% if project %}
+  <aside class="panel-card project-index-summary">
+    <div class="panel-heading compact"><div><span class="section-kicker">راهنمای محتوایی</span><h3>نمایه‌های پروژه</h3></div><button class="btn btn-sm btn-soft-primary" data-bs-toggle="modal" data-bs-target="#projectIndexesModal"><i class="fa-solid fa-plus ms-1"></i>مدیریت</button></div>
+    <div class="project-index-chips">{% for value in project_indexes %}<span><small>{{ value.index_type.name }}</small>{{ value.title }}</span>{% empty %}<div class="empty-mini">نمایه‌ای برای پروژه انتخاب نشده است.</div>{% endfor %}</div>
+  </aside>
+  {% endif %}
+</div>
+
+{% if project %}
+<section class="panel-card mt-4 project-research-section">
+  <div class="panel-heading"><div><span class="section-kicker">مخزن پروژه</span><h3>فیش‌های افزوده‌شده</h3><p class="text-muted mb-0 mt-1">فیش‌های مرتبط را مرور، حذف یا برای منبرسازی هوش مصنوعی استفاده کنید.</p></div><div class="d-flex flex-wrap gap-2"><a class="btn btn-soft-primary" href="{% url 'advanced_search' %}?project={{ project.pk }}"><i class="fa-solid fa-magnifying-glass-plus ms-2"></i>جست‌وجو و افزودن فیش</a><a class="btn btn-primary" href="{% url 'ai_sermon_builder' %}?project={{ project.pk }}"><i class="fa-solid fa-wand-magic-sparkles ms-2"></i>منبرسازی با AI</a></div></div>
+  <div class="project-research-list">{% for link in project_items %}<article class="project-research-row"><div class="project-research-icon"><i class="fa-solid fa-file-lines"></i></div><div class="project-research-copy min-w-0"><div class="d-flex flex-wrap gap-2 mb-1"><span class="status-pill status-{{ link.research.status }}">{{ link.research.get_status_display }}</span>{% if link.research.content_kind %}<span class="soft-tag">{{ link.research.content_kind.title }}</span>{% endif %}</div><h4><a href="{% url 'research_detail' link.research.pk %}">{{ link.research.title }}</a></h4><p>{{ link.research.abstract|default:link.research.body|striptags|truncatechars:230 }}</p><small><i class="fa-regular fa-user ms-1"></i>{{ link.research.researcher.display_name }} · افزوده‌شده در {{ link.created_at|date:'Y/m/d H:i' }}</small></div><form method="post" action="{% url 'project_remove_research' project.pk link.pk %}" onsubmit="return confirm('این فیش از پروژه حذف شود؟')">{% csrf_token %}<button class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-trash"></i></button></form></article>{% empty %}<div class="empty-state"><i class="fa-solid fa-file-circle-plus"></i><h3>هنوز فیشی به پروژه اضافه نشده است</h3><p>از دکمه «جست‌وجو و افزودن فیش» استفاده کنید.</p></div>{% endfor %}</div>
+</section>
+
+<div class="modal fade project-index-modal" id="projectIndexesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg"><div class="modal-content"><div class="modal-header"><div><span class="section-kicker">تنظیم راهنمای پروژه</span><h5 class="modal-title">نمایه‌های پروژه «{{ project.title }}»</h5></div><button class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button></div><div class="modal-body">
+    <form method="post" action="{% url 'project_index_add' project.pk %}" class="project-index-add-form">{% csrf_token %}<label class="form-label">افزودن نمایه</label>{% regroup available_project_index_values by index_type as grouped_project_values %}<select class="form-select select2" name="value_id" required><option value="">جست‌وجو و انتخاب نمایه</option>{% for group in grouped_project_values %}<optgroup label="{{ group.grouper.name }}">{% for value in group.list %}<option value="{{ value.pk }}">{{ value.title }}{% if value.visibility == 'private' %} (شخصی){% endif %}</option>{% endfor %}</optgroup>{% endfor %}</select><button class="btn btn-primary"><i class="fa-solid fa-plus ms-2"></i>افزودن</button></form>
+    <div class="modal-index-list mt-4">{% for value in project_indexes %}<div><span><small>{{ value.index_type.name }}</small><b>{{ value.title }}</b></span><form method="post" action="{% url 'project_index_remove' project.pk value.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-xmark"></i></button></form></div>{% empty %}<div class="empty-mini">نمایه‌ای انتخاب نشده است.</div>{% endfor %}</div>
+  </div><div class="modal-footer"><button class="btn btn-light" data-bs-dismiss="modal">بستن</button></div></div></div>
+</div>
+{% endif %}
+{{ project_audience_jobs|json_script:'project-audience-jobs-data' }}
+{{ existing_project_audiences|json_script:'project-audiences-data' }}
+{% endblock %}
+
+{% block scripts %}<script>
+(function(){
+  const modal=window.jQuery?$('#projectIndexesModal'):null;
+  if(modal&&modal.length&&window.ZOHA_SELECT2_AVAILABLE){const select=modal.find('select.select2');if(select.hasClass('select2-hidden-accessible'))select.select2('destroy');select.select2({theme:'bootstrap-5',dir:'rtl',width:'100%',dropdownParent:modal,placeholder:'جست‌وجو و انتخاب نمایه'});}
+  const container=document.getElementById('projectAudienceProfiles');
+  const hidden=document.getElementById('id_audiences_json');
+  const addButton=document.getElementById('addProjectAudience');
+  if(!container||!hidden||!addButton){console.error('ZOHA audience builder: required elements missing');return;}
+  const parseData=(id,fallback=[])=>{const node=document.getElementById(id);if(!node)return fallback;try{return JSON.parse(node.textContent||'[]')}catch(error){console.error('ZOHA audience data parse error',id,error);return fallback;}};
+  const jobs=parseData('project-audience-jobs-data',[]);
+  let profiles=parseData('project-audiences-data',[]);
+  const genders=['زن','مرد'];
+  const ages=['کودک','نوجوان','جوان','میانسال','کهنسال'];
+  const literacies=['مقدماتی','متوسط','پیشرفته'];
+  const channels=['مسجد','هیئت','مدرسه','دانشگاه','جلسه خانوادگی','کارگاه','شبکه اجتماعی','رسانه عمومی'];
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const unique=a=>Array.from(new Set(a||[]));
+  function chips(options,selected,field){return options.map(v=>`<label class="audience-toggle"><input type="checkbox" data-field="${field}" value="${esc(v)}" ${(selected||[]).includes(v)?'checked':''}><span>${esc(v)}</span></label>`).join('');}
+  function normalize(row={}){return {is_primary:!!row.is_primary,general:!!row.general,genders:row.genders||[],ages:row.ages||[],jobs:(row.jobs||[]).map(String),country:row.country||'',city:row.city||'',literacy:row.literacy||'',channels:row.channels||[],needs:row.needs||'',notes:row.notes||''};}
+  profiles=Array.isArray(profiles)?profiles.map(normalize):[];
+  function sync(){hidden.value=JSON.stringify(profiles);}
+  function render(){
+    container.innerHTML='';
+    if(!profiles.length){container.innerHTML='<div class="project-audience-empty"><i class="fa-solid fa-users-viewfinder"></i><div><strong>هنوز گروه مخاطبی تعریف نشده است</strong><p>برای طراحی دقیق پیام، حداقل مخاطب اصلی پروژه را اضافه کنید.</p></div></div>';sync();return;}
+    profiles.forEach((row,index)=>{
+      const card=document.createElement('article');card.className='project-audience-card animate__animated animate__fadeIn';
+      card.innerHTML=`<div class="project-audience-card-head"><div><span class="audience-number">${index+1}</span><strong>${row.is_primary?'مخاطب اصلی':'مخاطب تکمیلی'}</strong></div><div class="d-flex align-items-center gap-2"><label class="form-check mb-0"><input class="form-check-input primary-project-audience" type="radio" name="primaryProjectAudience" ${row.is_primary?'checked':''}><span class="form-check-label">اصلی</span></label><button class="btn btn-sm btn-outline-danger remove-project-audience" type="button"><i class="fa-solid fa-trash"></i></button></div></div><div class="project-audience-card-body"><label class="form-check project-general-check"><input class="form-check-input general-project-audience" type="checkbox" ${row.general?'checked':''}><span class="form-check-label"><strong>عموم مردم</strong><small>در صورت انتخاب، محدودیت‌های جزئی اختیاری هستند.</small></span></label><div class="project-audience-specific ${row.general?'opacity-50':''}"><div class="row g-3"><div class="col-lg-6"><label class="form-label">جنسیت</label><div class="audience-toggle-row">${chips(genders,row.genders,'genders')}</div></div><div class="col-lg-6"><label class="form-label">گروه سنی</label><div class="audience-toggle-row">${chips(ages,row.ages,'ages')}</div></div><div class="col-lg-7"><label class="form-label">صنف یا نقش اجتماعی</label><select class="form-select project-audience-jobs" multiple size="6">${jobs.map(j=>`<option value="${j.id}" ${row.jobs.includes(String(j.id))||row.jobs.includes(j.title)?'selected':''}>${esc(j.title)}${j.visibility==='private'?' (شخصی)':''}</option>`).join('')}</select><small class="form-help">برای انتخاب چند مورد Ctrl لازم نیست؛ روی گزینه‌ها کلیک کنید.</small></div><div class="col-lg-5"><label class="form-label">سطح آشنایی دینی</label><select class="form-select project-literacy"><option value="">تعیین نشده</option>${literacies.map(v=>`<option ${row.literacy===v?'selected':''}>${v}</option>`).join('')}</select><label class="form-label mt-3">کشور و شهر</label><div class="row g-2"><div class="col-6"><input class="form-control project-country" value="${esc(row.country)}" placeholder="کشور"></div><div class="col-6"><input class="form-control project-city" value="${esc(row.city)}" placeholder="شهر"></div></div></div><div class="col-12"><label class="form-label">بسترهای مناسب ارائه</label><div class="audience-toggle-row channels-row">${chips(channels,row.channels,'channels')}</div></div><div class="col-md-6"><label class="form-label">نیاز، مسئله یا دغدغه اصلی</label><textarea class="form-control project-needs" rows="3" placeholder="این گروه دقیقاً به چه پیام یا راهکاری نیاز دارد؟">${esc(row.needs)}</textarea></div><div class="col-md-6"><label class="form-label">ملاحظات لحن و ارائه</label><textarea class="form-control project-notes" rows="3" placeholder="زبان، حساسیت‌ها، مثال‌ها و نکات اجرایی">${esc(row.notes)}</textarea></div></div></div></div>`;
+      container.appendChild(card);
+      card.querySelector('.remove-project-audience').addEventListener('click',()=>{profiles.splice(index,1);if(profiles.length&&!profiles.some(x=>x.is_primary))profiles[0].is_primary=true;render();});
+      card.querySelector('.primary-project-audience').addEventListener('change',()=>{profiles.forEach((x,i)=>x.is_primary=i===index);render();});
+      card.querySelector('.general-project-audience').addEventListener('change',e=>{row.general=e.target.checked;card.querySelector('.project-audience-specific').classList.toggle('opacity-50',row.general);sync();});
+      card.querySelectorAll('input[data-field]').forEach(input=>input.addEventListener('change',()=>{const field=input.dataset.field;row[field]=unique(Array.from(card.querySelectorAll(`input[data-field="${field}"]:checked`)).map(x=>x.value));sync();}));
+      const jobsSelect=card.querySelector('.project-audience-jobs');jobsSelect.addEventListener('mousedown',e=>{if(e.target.tagName==='OPTION'){e.preventDefault();e.target.selected=!e.target.selected;jobsSelect.dispatchEvent(new Event('change'));}});jobsSelect.addEventListener('change',()=>{row.jobs=Array.from(jobsSelect.selectedOptions).map(x=>x.value);sync();});
+      card.querySelector('.project-literacy').addEventListener('change',e=>{row.literacy=e.target.value;sync();});
+      card.querySelector('.project-country').addEventListener('input',e=>{row.country=e.target.value;sync();});
+      card.querySelector('.project-city').addEventListener('input',e=>{row.city=e.target.value;sync();});
+      card.querySelector('.project-needs').addEventListener('input',e=>{row.needs=e.target.value;sync();});
+      card.querySelector('.project-notes').addEventListener('input',e=>{row.notes=e.target.value;sync();});
+    });sync();
+  }
+  addButton.addEventListener('click',()=>{profiles.push(normalize({is_primary:profiles.length===0}));render();container.lastElementChild?.scrollIntoView({behavior:'smooth',block:'center'});});
+  render();
+})();
+</script>{% endblock %}

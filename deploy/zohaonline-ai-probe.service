@@ -1,0 +1,14 @@
+[Unit]
+Description=ZohaOnline hourly g4f provider/model probe
+After=network-online.target zohaonline.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=zohaonline
+Group=www-data
+WorkingDirectory=/opt/zohaonline
+EnvironmentFile=/opt/zohaonline/.env
+ExecStart=/opt/zohaonline/.venv/bin/python /opt/zohaonline/manage.py probe_ai_providers --timeout 15 --concurrency 8
+TimeoutStartSec=55min
+Nice=10

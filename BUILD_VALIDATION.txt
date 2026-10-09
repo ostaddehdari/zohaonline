@@ -1,0 +1,32 @@
+ZohaOnline Discovery & Full Content 2.7.0 — Build validation
+Release marker: ZOHA-DISCOVERY-270
+
+Build-time checks before final packaging:
+- Python compileall: PASS
+- Python AST parse: PASS
+- JavaScript syntax (Node --check): PASS
+- Bash syntax: PASS
+- JSON parse: PASS
+- initial_index_data hierarchical parent validation: PASS
+- canonical 12 content-kind values: PASS
+- URL/template static scan: PASS (0 missing local URL names)
+- Seed loader supports cross-index parent_type: PASS
+- Research migration chain includes 0013_discovery_full_content_270: PASS (static inspection)
+- Installer preserves .env/media/.venv/staticfiles and creates DB/app/Nginx backups: PASS
+- Upgrade installer preserves existing admin passwords unless ADMIN_PASSWORD is explicitly supplied: PASS
+- Upgrade installer preserves existing HTTPS cookie/redirect settings: PASS
+
+Destination-server installer additionally performs:
+- PostgreSQL pg_trgm activation before migration
+- Django migrate
+- 2.7 legacy vocabulary merge + optional Demo purge
+- canonical seed
+- search-document rebuild
+- collectstatic
+- Django system check
+- makemigrations --check --dry-run
+- Gunicorn/systemd restart
+- Nginx syntax check and release-marker verification over direct/HTTP/HTTPS
+
+Environment note:
+Django is not installed in this build container. Framework runtime checks are delegated to the target-server installer; all static/syntax/package checks are executed here.

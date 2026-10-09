@@ -1,0 +1,1 @@
+cd /root/zohaonline && unzip -o ZohaOnline_Discovery_FullContent_v2.7.0.zip && cd ZohaOnline_Discovery_FullContent_v2.7.0_Django_zohaonline && chmod +x install_or_upgrade_zoha.sh diagnose.sh && sudo env APP_DIR=/opt/zohaonline SERVER_IP=5.61.27.185 URL_PREFIX=zohaonline bash install_or_upgrade_zoha.sh

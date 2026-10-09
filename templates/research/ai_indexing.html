@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}نمایه‌زنی هوش مصنوعی | ضحی آنلاین{% endblock %}
+{% block page_title %}نمایه‌زنی با هوش مصنوعی{% endblock %}
+{% block eyebrow %}پیشنهاد، تطبیق، تأیید انسانی و اعمال کنترل‌شده{% endblock %}
+{% block content %}
+<section class="detail-hero">
+  <div>
+    <span class="hero-kicker"><i class="fa-solid fa-tags"></i> AI-assisted Indexing</span>
+    <h2>{{ research.title }}</h2>
+    <p class="mb-0 opacity-75">هیچ پیشنهاد هوش مصنوعی بدون تصمیم پژوهشگر وارد داده اصلی فیش نمی‌شود.</p>
+  </div>
+  <a class="btn btn-light" href="{% url 'research_detail' research.pk %}">بازگشت به فیش</a>
+</section>
+
+<div class="row g-4 mt-1 align-items-start">
+  <div class="col-xl-4">
+    <section class="panel-card mb-4">
+      <div class="panel-heading"><div><span class="section-kicker">اجرای جدید</span><h3>مدل فعال</h3></div></div>
+      {% if endpoints %}
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="generate">
+        <div class="mb-3">
+          <label class="form-label">ارائه‌دهنده / مدل</label>
+          <select name="endpoint" class="form-select select2" required>
+            <option value="">انتخاب کنید</option>
+            {% for endpoint in endpoints %}<option value="{{ endpoint.pk }}" {% if selected_endpoint == endpoint.pk|stringformat:'s' %}selected{% endif %}>{{ endpoint.provider_name }} — {{ endpoint.model_name }}{% if endpoint.latency_ms %} ({{ endpoint.latency_ms }}ms){% endif %}</option>{% endfor %}
+          </select>
+          <div class="form-help">فقط مدل‌هایی که در دو ساعت اخیر پاسخ موفق داشته‌اند نمایش داده می‌شوند.</div>
+        </div>
+        <button class="btn btn-primary w-100"><i class="fa-solid fa-wand-magic-sparkles ms-2"></i>تولید پیشنهاد جدید</button>
+      </form>
+      {% else %}
+      <div class="alert alert-soft-warning">مدل فعال ثبت نشده است.</div>
+      <a class="btn btn-soft-primary w-100" href="{% url 'ai_provider_status' %}">مشاهده وضعیت مدل‌ها</a>
+      {% endif %}
+      {% if error %}<div class="alert alert-danger mt-3 mb-0"><b>خطا:</b><br>{{ error }}</div>{% endif %}
+    </section>
+
+    <section class="panel-card">
+      <div class="panel-heading compact"><div><span class="section-kicker">تاریخچه</span><h3>اجراهای اخیر</h3></div></div>
+      <div class="list-group list-group-flush">
+        {% for run in runs %}
+        <a href="?run={{ run.pk }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if current_run.pk == run.pk %}active{% endif %}">
+          <span><b>#{{ run.pk }}</b><small class="d-block {% if current_run.pk == run.pk %}text-white-50{% else %}text-muted{% endif %}">{{ run.created_at|date:'Y/m/d H:i' }}</small></span>
+          <span>{{ run.get_status_display }}</span>
+        </a>
+        {% empty %}<div class="empty-state py-4"><p class="mb-0">هنوز اجرایی ثبت نشده است.</p></div>{% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div class="col-xl-8">
+    {% if current_run %}
+    <section class="panel-card mb-4">
+      <div class="panel-heading">
+        <div><span class="section-kicker">اجرای #{{ current_run.pk }}</span><h3>بررسی پیشنهادها</h3><p class="text-muted mb-0">{{ current_run.endpoint.provider_name }} — {{ current_run.endpoint.model_name }}</p></div>
+        <span class="status-pill">{{ current_run.get_status_display }}</span>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <span class="soft-tag"><i class="fa-solid fa-check"></i> پذیرفته: {{ accepted_count }}</span>
+        <span class="soft-tag"><i class="fa-solid fa-xmark"></i> رد: {{ rejected_count }}</span>
+        <span class="soft-tag"><i class="fa-regular fa-clock"></i> در انتظار: {{ pending_count }}</span>
+      </div>
+
+      <div class="d-grid gap-3">
+      {% for suggestion in suggestions %}
+        <article class="border rounded-4 p-3 {% if suggestion.decision == 'accepted' %}border-success{% elif suggestion.decision == 'rejected' %}border-danger opacity-75{% endif %}">
+          <div class="d-flex gap-3 justify-content-between align-items-start flex-wrap">
+            <div class="min-w-0">
+              <div class="d-flex gap-2 align-items-center flex-wrap mb-2">
+                <span class="badge text-bg-light">{{ suggestion.get_kind_display }}</span>
+                {% if suggestion.decision == 'accepted' %}<span class="badge text-bg-success">پذیرفته</span>{% elif suggestion.decision == 'rejected' %}<span class="badge text-bg-danger">رد شده</span>{% else %}<span class="badge text-bg-warning">در انتظار تصمیم</span>{% endif %}
+              </div>
+              <h4 class="h6 mb-2">{{ suggestion.label }}</h4>
+
+              {% if suggestion.kind == 'topic_analysis' %}
+                <div class="small text-muted mb-2">
+                  {% if suggestion.payload.processing_keys %}<b>کلید پردازش:</b> {{ suggestion.payload.processing_keys|join:'، ' }}<br>{% endif %}
+                  {% if suggestion.payload.predicate %}<b>محمول:</b> {{ suggestion.payload.predicate }}<br>{% endif %}
+                  {% if suggestion.payload.interpretation %}<b>برداشت پیشنهادی:</b> {{ suggestion.payload.interpretation }}{% endif %}
+                </div>
+                {% if suggestion.match_data.topic %}<div class="alert alert-success py-2 mb-1"><i class="fa-solid fa-link ms-1"></i>موضوع تطبیق‌یافته: <b>{{ suggestion.match_data.topic.title }}</b> · {{ suggestion.match_data.topic.score }}</div>{% else %}<div class="alert alert-warning py-2 mb-1">برای موضوع تطبیق قطعی پیدا نشد؛ این مورد هنگام اعمال رد می‌شود تا داده جدید ناخواسته ساخته نشود.</div>{% endif %}
+                {% if suggestion.match_data.predicate %}<div class="small text-success">محمول تطبیق‌یافته: {{ suggestion.match_data.predicate.title }}</div>{% endif %}
+                {% if suggestion.match_data.processing_keys %}<div class="small text-success">کلیدهای تطبیق‌یافته: {% for item in suggestion.match_data.processing_keys %}{{ item.title }}{% if not forloop.last %}، {% endif %}{% endfor %}</div>{% endif %}
+              {% elif suggestion.kind == 'character' or suggestion.kind == 'occasion' %}
+                {% if suggestion.match_data.value %}<div class="alert alert-success py-2 mb-0"><i class="fa-solid fa-link ms-1"></i>تطبیق با: <b>{{ suggestion.match_data.value.title }}</b> · {{ suggestion.match_data.value.score }}</div>{% else %}<div class="alert alert-warning py-2 mb-0">تطبیق قطعی با فرهنگ نمایه پیدا نشد.</div>{% endif %}
+              {% endif %}
+            </div>
+            {% if current_run.status == 'review' %}
+            <div class="d-flex gap-1">
+              <form method="post" action="{% url 'ai_indexing_decision' current_run.pk suggestion.pk 'accepted' %}">{% csrf_token %}<button class="btn btn-sm btn-outline-success" title="پذیرش"><i class="fa-solid fa-check"></i></button></form>
+              <form method="post" action="{% url 'ai_indexing_decision' current_run.pk suggestion.pk 'rejected' %}">{% csrf_token %}<button class="btn btn-sm btn-outline-danger" title="رد"><i class="fa-solid fa-xmark"></i></button></form>
+              {% if suggestion.decision != 'pending' %}<form method="post" action="{% url 'ai_indexing_decision' current_run.pk suggestion.pk 'pending' %}">{% csrf_token %}<button class="btn btn-sm btn-outline-secondary" title="بازنشانی"><i class="fa-solid fa-rotate-left"></i></button></form>{% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </article>
+      {% empty %}<div class="empty-state"><i class="fa-solid fa-robot"></i><h3>پیشنهادی استخراج نشد</h3><p>پاسخ خام را بررسی کنید یا اجرای دیگری انجام دهید.</p></div>{% endfor %}
+      </div>
+
+      {% if current_run.status == 'review' %}
+      <form method="post" action="{% url 'ai_indexing_apply' current_run.pk %}" class="mt-4">{% csrf_token %}
+        <button class="btn btn-success btn-lg w-100" {% if not accepted_count %}disabled{% endif %} onclick="return confirm('فقط پیشنهادهای پذیرفته‌شده روی فیش اعمال شوند؟')"><i class="fa-solid fa-floppy-disk ms-2"></i>اعمال {{ accepted_count }} پیشنهاد پذیرفته‌شده روی فیش</button>
+      </form>
+      {% endif %}
+
+      <details class="mt-4"><summary class="text-muted">مشاهده پاسخ خام مدل</summary><pre class="ai-output-text mt-3">{{ current_run.raw_response }}</pre></details>
+    </section>
+    {% else %}
+    <section class="panel-card ai-output-panel"><div class="empty-state"><i class="fa-solid fa-robot"></i><h3>هنوز خروجی تولید نشده است</h3><p>یک مدل فعال انتخاب کنید تا پیشنهادها ساخته و برای بررسی ذخیره شوند.</p></div></section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

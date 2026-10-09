@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}ورود | ضحی آنلاین{% endblock %}
+{% block auth_content %}
+<div class="auth-page">
+  <div class="auth-orb auth-orb-one"></div><div class="auth-orb auth-orb-two"></div>
+  <section class="auth-showcase animate__animated animate__fadeInRight">
+    <div class="auth-brand"><span><i class="fa-solid fa-sun"></i></span><div><strong>ضحی آنلاین</strong><small>پایگاه دانش و فیش‌های تبلیغی دینی</small></div></div>
+    <div class="auth-copy"><span class="eyebrow"><i class="fa-solid fa-sparkles"></i> دانش منظم، محتوای اثرگذار</span><h1>از ثبت فیش تا تحلیل و ارزیابی، همه‌چیز در یک فضای فارسی و هوشمند</h1><p>فیش‌نگاری، ارزیابی، جست‌وجوی ساختاریافته، گروه‌های کاری و دستیار هوش مصنوعی در یک محیط یکپارچه در دسترس است.</p></div>
+    <div class="auth-features"><div><i class="fa-solid fa-diagram-project"></i><span>تحلیل موضوعی ساختاریافته</span></div><div><i class="fa-solid fa-filter-circle-dollar"></i><span>جست‌وجوی ترکیبی پیشرفته</span></div><div><i class="fa-solid fa-chart-line"></i><span>گزارش‌ها و شاخص‌های متنوع</span></div></div>
+  </section>
+  <section class="auth-form-panel animate__animated animate__fadeInLeft">
+    <div class="auth-card-pro">
+      <div class="auth-card-icon"><i class="fa-solid fa-fingerprint"></i></div>
+      <div class="mb-4"><span class="section-kicker">ورود امن</span><h2>خوش آمدید</h2><p>برای ادامه، نام کاربری و رمز عبور خود را وارد کنید.</p></div>
+      {% if form.non_field_errors %}<div class="alert alert-danger border-0"><i class="fa-solid fa-circle-exclamation ms-2"></i>{{ form.non_field_errors }}</div>{% endif %}
+      <form method="post" novalidate>{% csrf_token %}
+        <div class="mb-3"><label class="form-label" for="{{ form.username.id_for_label }}">نام کاربری</label><div class="input-icon-wrap"><i class="fa-regular fa-user"></i>{{ form.username }}</div>{{ form.username.errors }}</div>
+        <div class="mb-3"><label class="form-label" for="{{ form.password.id_for_label }}">رمز عبور</label><div class="input-icon-wrap"><i class="fa-solid fa-key"></i>{{ form.password }}</div>{{ form.password.errors }}</div>
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button class="btn btn-primary btn-lg w-100 mt-2"><i class="fa-solid fa-arrow-left-to-bracket ms-2"></i>ورود به سامانه</button>
+      </form>
+      <div class="auth-divider"><span>حساب کاربری ندارید؟</span></div>
+      <a class="btn btn-outline-primary w-100" href="{% url 'signup' %}"><i class="fa-solid fa-user-plus ms-2"></i>ثبت‌نام مبلغ</a>
+      <div class="auth-security"><i class="fa-solid fa-shield-halved"></i><span>ارتباط شما با سامانه با کنترل نشست و محافظت CSRF ایمن می‌شود.</span></div>
+    </div>
+  </section>
+</div>
+{% endblock %}

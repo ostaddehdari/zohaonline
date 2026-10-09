@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% load static %}{% block title %}{% if item %}ویرایش{% else %}بارگذاری{% endif %} محتوای کامل | ضحی آنلاین{% endblock %}{% block content %}
+<section class="panel-card"><div class="panel-heading"><div><span class="section-kicker">محتوای کامل</span><h2>{% if item %}ویرایش محتوای کامل{% else %}بارگذاری محتوای کامل{% endif %}</h2><p class="mb-0 text-muted">اطلاعات محتوای کامل و نمایه‌های اصلی آن را ثبت کنید.</p></div></div>
+<form method="post" enctype="multipart/form-data" class="row g-3">{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+{% for field in form %}<div class="{% if field.name == 'body' or field.name == 'audience_text' %}col-12{% else %}col-md-6{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}{{ field.errors }}</div>{% endfor %}
+<div class="col-12 d-flex gap-2"><button class="btn btn-primary"><i class="fa-regular fa-floppy-disk ms-2"></i>ذخیره</button><a class="btn btn-light" href="{% url 'full_content_list' %}">انصراف</a></div></form></section>{% endblock %}
+{% block scripts %}<script src="{% static 'js/jalali_picker_270.js' %}"></script>{% endblock %}

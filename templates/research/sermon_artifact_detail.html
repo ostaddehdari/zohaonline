@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load zoha_dates %}
+{% block title %}{{ artifact.title }} | منبر ذخیره‌شده{% endblock %}
+{% block page_title %}ویرایش منبر ذخیره‌شده{% endblock %}
+{% block eyebrow %}Artifact مستقل با تاریخچه نسخه‌ها{% endblock %}
+{% block content %}
+<section class="detail-hero"><div><span class="hero-kicker"><i class="fa-solid fa-scroll"></i> نسخه {{ artifact.version }}</span><h2>{{ artifact.title }}</h2><p class="mb-0 opacity-75">{{ artifact.project.title }} · {{ artifact.style.name }} · {{ artifact.get_status_display }}</p></div><a class="btn btn-light" href="{% url 'ai_sermon_builder' %}?project={{ artifact.project_id }}">بازگشت به منبرساز</a></section>
+<div class="row g-4 mt-1 align-items-start"><div class="col-xl-8"><section class="panel-card"><form method="post">{% csrf_token %}<div class="mb-3"><label class="form-label required">عنوان</label><input class="form-control" name="title" value="{{ artifact.title }}" maxlength="250" required></div><div class="mb-3"><label class="form-label">موضوع یا زاویه</label><textarea class="form-control" name="topic" rows="2">{{ artifact.topic }}</textarea></div><div class="mb-3"><label class="form-label required">متن منبر</label><textarea class="form-control" name="content" rows="30" required>{{ artifact.content }}</textarea><div class="form-help">هر تغییر در متن یک Revision جدید ایجاد می‌کند و نسخه قبلی حفظ می‌شود.</div>
+
+<!-- ZOHA-W2.3-SERMON-PREVIEW:START -->
+<div class="mt-4">
+  <div class="panel-heading compact mb-2">
+    <div>
+      <span class="section-kicker">پیش‌نمایش معنایی</span>
+      <h3 class="h6 mb-0">آیه، روایت و شعر</h3>
+    </div>
+  </div>
+
+  <article
+    class="research-body border rounded p-3"
+    style="white-space:pre-wrap;line-height:2"
+  >{% semantic_text_content artifact.content artifact.ai_segments artifact.external_references %}</article>
+</div>
+<!-- ZOHA-W2.3-SERMON-PREVIEW:END --></div><div class="mb-3"><label class="form-label">وضعیت</label><select class="form-select" name="status">{% for value,label in artifact.STATUS %}<option value="{{ value }}" {% if artifact.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div><div class="d-flex gap-2"><button class="btn btn-primary"><i class="fa-regular fa-floppy-disk ms-2"></i>ذخیره</button><button type="button" class="btn btn-outline-secondary" data-copy-artifact>کپی متن</button></div></form></section></div><div class="col-xl-4"><section class="panel-card"><div class="panel-heading compact"><div><span class="section-kicker">Version History</span><h3>نسخه‌های منبر</h3></div></div><div class="list-group list-group-flush">{% for revision in revisions %}<div class="list-group-item"><div class="d-flex justify-content-between"><b>نسخه {{ revision.version }}</b><span class="badge text-bg-light">{{ revision.get_source_display }}</span></div><small class="text-muted">{{ revision.created_at|date:'Y/m/d H:i' }}{% if revision.edited_by %} · {{ revision.edited_by.display_name }}{% endif %}</small><details class="mt-2"><summary>مشاهده متن این نسخه</summary><div class="small border rounded p-2 mt-2" style="white-space:pre-wrap;max-height:320px;overflow:auto">{{ revision.content }}</div></details></div>{% endfor %}</div></section></div></div>
+{% endblock %}
+{% block scripts %}<script>document.querySelector('[data-copy-artifact]')?.addEventListener('click',async()=>{await navigator.clipboard.writeText(document.querySelector('textarea[name="content"]')?.value||'');window.ZohaUI?.toast('متن منبر کپی شد.');});</script>{% endblock %}

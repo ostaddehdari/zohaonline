@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}ثبت‌نام مبلغ | ضحی آنلاین{% endblock %}
+{% block auth_content %}
+<div class="auth-page auth-page-wide">
+  <div class="auth-orb auth-orb-one"></div><div class="auth-orb auth-orb-two"></div>
+  <section class="auth-showcase animate__animated animate__fadeInRight">
+    <div class="auth-brand"><span><i class="fa-solid fa-sun"></i></span><div><strong>ضحی آنلاین</strong><small>شبکه دانش و محتوای تبلیغی</small></div></div>
+    <div class="auth-copy"><span class="eyebrow"><i class="fa-solid fa-user-plus"></i> عضویت در سامانه</span><h1>پروفایل شخصی خود را بسازید و به محتوای ارزیابی‌شده دسترسی پیدا کنید</h1><p>ثبت‌نام عمومی فقط نقش «مبلغ» ایجاد می‌کند. نقش فیش‌نگار، ارزیاب یا مدیر توسط مدیر سامانه تخصیص داده می‌شود.</p></div>
+    <div class="auth-features"><div><i class="fa-solid fa-book-open-reader"></i><span>دسترسی به فیش‌های عمومی و تأییدشده</span></div><div><i class="fa-solid fa-magnifying-glass-chart"></i><span>جست‌وجوی دقیق در متن و نمایه‌ها</span></div><div><i class="fa-solid fa-user-shield"></i><span>نقش‌ها و دسترسی‌های کنترل‌شده</span></div></div>
+  </section>
+  <section class="auth-form-panel animate__animated animate__fadeInLeft">
+    <div class="auth-card-pro auth-card-signup">
+      <div class="d-flex align-items-start justify-content-between gap-3 mb-4"><div><span class="section-kicker">ایجاد حساب</span><h2>ثبت‌نام مبلغ</h2><p>اطلاعات زیر را دقیق تکمیل کنید.</p></div><a class="btn btn-icon-soft" href="{% url 'login' %}" title="بازگشت به ورود"><i class="fa-solid fa-arrow-left"></i></a></div>
+      {% if form.non_field_errors %}<div class="alert alert-danger border-0">{{ form.non_field_errors }}</div>{% endif %}
+      <form method="post" novalidate>{% csrf_token %}<div class="row g-3">
+        {% for field in form %}<div class="{% if field.name == 'expertise' or field.name == 'preaching_field' %}col-12{% else %}col-md-6{% endif %}"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="text-danger"> *</span>{% endif %}</label>{{ field }}{% if field.help_text %}<div class="form-help">{{ field.help_text|safe }}</div>{% endif %}{% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}</div>{% endfor %}
+      </div><button class="btn btn-primary btn-lg w-100 mt-4"><i class="fa-solid fa-user-check ms-2"></i>ایجاد حساب کاربری</button></form>
+      <div class="auth-security"><i class="fa-solid fa-circle-info"></i><span>پس از ثبت‌نام، با همان نام کاربری وارد سامانه شوید.</span></div>
+    </div>
+  </section>
+</div>
+{% endblock %}

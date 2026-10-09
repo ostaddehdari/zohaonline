@@ -1,0 +1,7 @@
+APP_NAME = "ZohaOnline"
+VERSION = "5.0.1"
+CODENAME = "Revision 5 / درگاه جامع محتوای تبلیغی"
+MARKER = "ZOHA-REVISION-5-501"
+DISPLAY_VERSION = "۵.۰.۱"
+RELEASE_NAME_FA = "نسخه پنجم؛ بازطراحی و پایداری رابط"
+EDITOR_VERSION = "integrated-501"

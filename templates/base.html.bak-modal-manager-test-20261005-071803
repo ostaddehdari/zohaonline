@@ -1,0 +1,165 @@
+{% load static zoha_dates %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102477">
+  <meta name="zoha-release" content="{{ release_marker }}">
+  <title>{% block title %}ضحی آنلاین{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/animate/animate.min.css' %}" rel="stylesheet">
+  <script defer src="{% static 'vendor/fontawesome/all.min.js' %}"></script>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.rtl.min.css" rel="stylesheet">
+  <link href="{% static 'css/app_270.css' %}" rel="stylesheet">
+  <link href="{% static 'css/revision4.css' %}" rel="stylesheet">
+  <link href="{% static 'css/revision5.css' %}" rel="stylesheet">
+  {% block head %}{% endblock %}
+</head>
+<body data-zoha-release="{{ release_marker }}" class="{% if user.is_authenticated %}zoha-app-shell{% else %}zoha-auth-shell{% endif %}">
+{% if user.is_authenticated %}
+<div class="zoha-layout">
+  <aside class="zoha-sidebar" id="appSidebar">
+    <div class="zoha-brand">
+      <img src="{% static 'img/zoha-logo.png' %}" alt="لوگوی ضحی">
+      <div><strong>ضحی آنلاین</strong><small>پایگاه دانش فرهنگی مذهبی</small></div>
+      <button class="btn sidebar-close d-lg-none" type="button" data-sidebar-close aria-label="بستن"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <nav class="zoha-nav">
+      <a class="zoha-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}"><i class="fa-solid fa-table-cells-large"></i><span>داشبورد</span></a>
+      {% if user.is_superuser or is_zoha_admin or user_has_researcher %}
+      <a class="zoha-nav-link nav-create {% if request.resolver_match.url_name == 'research_create' %}active{% endif %}" href="{% url 'research_create' %}"><i class="fa-regular fa-square-plus"></i><span>ثبت فیش جدید</span></a>
+      <!-- ZOHA-W3.1-SIDEBAR-CONTENT-STATS:START -->
+      <!-- ZOHA-W3.2-COLLAPSIBLE-SIDEBAR:START -->
+
+      {% sidebar_content_stats as zoha_sidebar_content_stats %}
+
+      <div class="zoha-sidebar-content-stats">
+
+        {% for block in zoha_sidebar_content_stats %}
+
+        <details
+          class="zoha-sidebar-stat-block zoha-sidebar-stat-{{ block.key }}"
+          {% if forloop.first %}open{% endif %}
+        >
+
+          <summary class="zoha-sidebar-stat-title">
+
+            <span class="zoha-sidebar-stat-title-main">
+              <i class="fa-solid {{ block.icon }}"></i>
+              <strong>{{ block.title }}</strong>
+            </span>
+
+            <span class="zoha-sidebar-stat-title-meta">
+
+              <b
+                class="zoha-sidebar-stat-total"
+                title="کل بارگذاری من"
+              >{{ block.rows.0.value }}</b>
+
+              <i
+                class="fa-solid fa-chevron-down zoha-sidebar-stat-chevron"
+                aria-hidden="true"
+              ></i>
+
+            </span>
+
+          </summary>
+
+          <div class="zoha-sidebar-stat-rows">
+
+            {% for row in block.rows %}
+
+            <a
+              class="zoha-sidebar-stat-row zoha-sidebar-stat-row-{{ row.key }}{% if not row.value %} is-zero{% endif %}"
+              href="{{ row.url }}"
+            >
+              <span>{{ row.label }}</span>
+              <b>{{ row.value }}</b>
+            </a>
+
+            {% endfor %}
+
+          </div>
+
+        </details>
+
+        {% endfor %}
+
+      </div>
+
+      <!-- ZOHA-W3.2-COLLAPSIBLE-SIDEBAR:END -->
+      <!-- ZOHA-W3.1-SIDEBAR-CONTENT-STATS:END -->
+
+      <a class="zoha-nav-link {% if request.resolver_match.url_name == 'custom_collections' %}active{% endif %}" href="{% url 'custom_collections' %}"><i class="fa-regular fa-folder-open"></i><span>دسته‌بندی‌های اختصاصی</span></a>
+      {% endif %}
+      {% if user.is_superuser or is_zoha_admin or user_has_reviewer %}
+      <a class="zoha-nav-link {% if request.resolver_match.url_name == 'review_tasks' %}active{% endif %}" href="{% url 'review_tasks' %}"><i class="fa-solid fa-clipboard-check"></i><span>کارتابل ارزیابی</span></a>
+      {% endif %}
+      <div class="zoha-nav-separator"></div>
+      <a class="zoha-nav-link {% if request.resolver_match.url_name == 'advanced_search' %}active{% endif %}" href="{% url 'advanced_search' %}"><i class="fa-solid fa-magnifying-glass"></i><span>جست‌وجوی فیش‌های ضحی</span></a>
+      <a class="zoha-nav-link {% if request.resolver_match.url_name == 'project_list' %}active{% endif %}" href="{% url 'project_list' %}"><i class="fa-solid fa-diagram-project"></i><span>پروژه‌های تبلیغی</span></a>
+      <a class="zoha-nav-link {% if request.resolver_match.url_name == 'ai_sermon_builder' %}active{% endif %}" href="{% url 'ai_sermon_builder' %}"><i class="fa-solid fa-wand-magic-sparkles"></i><span>منبرساز هوشمند</span></a>
+      <a class="zoha-nav-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}" href="{% url 'notifications' %}"><i class="fa-regular fa-bell"></i><span>اعلان‌ها</span>{% if unread_notifications_count %}<b class="nav-counter">{{ unread_notifications_count }}</b>{% endif %}</a>
+      <a class="zoha-nav-link {% if request.resolver_match.url_name == 'documentation' %}active{% endif %}" href="{% url 'documentation' %}"><i class="fa-regular fa-circle-question"></i><span>راهنمای جامع سامانه</span></a>
+
+      {% if user.is_superuser or is_zoha_admin %}
+      <div class="zoha-nav-caption">مدیریت سامانه</div>
+      <a class="zoha-nav-link" href="{% url 'user_list' %}"><i class="fa-solid fa-users-gear"></i><span>کاربران و نقش‌ها</span></a>
+      <a class="zoha-nav-link" href="{% url 'team_list' %}"><i class="fa-solid fa-people-group"></i><span>گروه‌های کاری</span></a>
+      <a class="zoha-nav-link" href="{% url 'assignments' %}"><i class="fa-solid fa-user-check"></i><span>تخصیص ارزیاب</span></a>
+      <a class="zoha-nav-link" href="{% url 'option_management' %}"><i class="fa-solid fa-list-check"></i><span>مدیریت فرهنگ نمایه</span></a>
+      <a class="zoha-nav-link" href="{% url 'reports' %}"><i class="fa-solid fa-chart-column"></i><span>گزارش‌ها</span></a>
+      {% endif %}
+    </nav>
+
+    <div class="zoha-sidebar-foot">
+      <a href="#"><i class="fa-solid fa-gear"></i><span>تنظیمات</span></a>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button><i class="fa-solid fa-arrow-right-from-bracket"></i><span>خروج</span></button></form>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" data-sidebar-close></div>
+
+  <div class="zoha-main">
+    <header class="zoha-topbar">
+      <div class="zoha-userbox">
+        <button class="btn topbar-icon d-lg-none" type="button" data-sidebar-open><i class="fa-solid fa-bars"></i></button>
+        <div class="zoha-avatar">{% if user.avatar %}<img src="{{ user.avatar.url }}" alt="{{ user.display_name }}">{% else %}<i class="fa-solid fa-user"></i>{% endif %}</div>
+        <div><strong>{{ user.display_name }}</strong><small>{% if user_has_researcher %}فیش‌بردار{% elif user_has_reviewer %}ارزیاب{% else %}کاربر ضحی{% endif %}</small></div>
+      </div>
+      <form class="zoha-top-search d-none d-md-flex" method="get" action="{% url 'advanced_search' %}">
+        <i class="fa-solid fa-magnifying-glass"></i><input name="q" placeholder="جست‌وجو در فیش‌ها، منابع و موضوعات…" aria-label="جست‌وجو">
+        <input type="hidden" name="q_fields" value="body"><input type="hidden" name="q_fields" value="abstract">
+      </form>
+      <div class="zoha-top-actions">
+        <a class="top-action" href="{% url 'notifications' %}" aria-label="اعلان‌ها"><i class="fa-regular fa-bell"></i>{% if unread_notifications_count %}<span>{{ unread_notifications_count }}</span>{% endif %}</a>
+        <a class="top-action d-none d-sm-inline-flex" href="{% url 'public_home' %}" title="صفحه عمومی"><i class="fa-solid fa-globe"></i></a>
+      </div>
+    </header>
+
+    <main class="zoha-content">
+      {% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show zoha-alert" role="alert">{{ message }}<button class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% else %}
+<main>{% block auth_content %}{% block content_public %}{% endblock %}{% endblock %}</main>
+{% endif %}
+<div class="toast-container position-fixed bottom-0 start-0 p-3" id="toastContainer"></div>
+<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>window.ZOHA={csrfCookie:'zohaonline_csrftoken',urls:{options:'{% url "api_options" %}',addOption:'{% url "api_option_add" %}',optionEditPattern:'{% url "api_option_edit" 0 %}',titleSimilar:'{% url "api_title_similar" %}',sources:'{% url "api_sources" %}',addSource:'{% url "api_source_add" %}',sourceEditPattern:'{% url "api_source_edit" 0 %}'}};</script>
+<script src="{% static 'js/app_270.js' %}"></script>
+<script src="{% static 'js/context_help.js' %}"></script>
+<script src="{% static 'js/modal_manager_v5.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
